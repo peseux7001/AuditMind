@@ -58,7 +58,6 @@ const shellContent = {
     { label: "자료제출 요청", href: "/?page=submission-requests", page: "submission-requests", count: "" },
     { label: "제출자료 검토", href: "/?page=review", page: "review", count: "" },
     { label: "서비스 관리", href: "/?page=templates", page: "templates", count: "" },
-    { label: "설정", href: "#", page: "settings", count: "" },
     { label: "자료 제출 페이지 (고객용 데모)", href: "/submit/demo-token", page: "customer-test", count: "" },
   ],
   notifications: [
