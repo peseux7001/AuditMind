@@ -39,6 +39,10 @@ docker compose exec -T "$DB_SERVICE" \
 
 docker compose exec -T "$DB_SERVICE" \
   psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME" \
+  -f /workspace/database/migrations/008_submission_request_customer_link.sql
+
+docker compose exec -T "$DB_SERVICE" \
+  psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME" \
   -f /workspace/database/seeds/001_document_type_seed.sql
 
 docker compose exec -T "$DB_SERVICE" \

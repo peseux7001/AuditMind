@@ -1,13 +1,19 @@
 -- Seed review work items for the accountant submission-review screen.
 -- These are realistic persisted processing results, not browser-time OCR execution.
 
-INSERT INTO customer_submission_requests (id, customer_name, request_title, request_period, due_date, status)
-VALUES
-  ('11111111-1111-4111-8111-111111111111', '샘플테크 주식회사', '거래처 정산계좌 확인', '2026년 5월', '2026-05-22', 'open'),
-  ('22222222-2222-4222-8222-222222222222', '루멘커머스', '월간 매출 정산자료 검토', '2026년 5월', '2026-05-23', 'open'),
-  ('33333333-3333-4333-8333-333333333333', '브릿지AI', '투자 실사 자료 준비', '2026년 5월', '2026-05-23', 'open'),
-  ('44444444-4444-4444-8444-444444444444', '오르빗헬스', '법인세 기초자료 수집', '2026년 5월', '2026-05-30', 'open')
+WITH request_seed(id, customer_name, request_title, request_period, due_date, status) AS (
+  VALUES
+    ('11111111-1111-4111-8111-111111111111'::uuid, '샘플테크 주식회사', '거래처 정산계좌 확인', '2026년 5월', '2026-05-22'::date, 'open'),
+    ('22222222-2222-4222-8222-222222222222'::uuid, '루멘커머스', '월간 매출 정산자료 검토', '2026년 5월', '2026-05-23'::date, 'open'),
+    ('33333333-3333-4333-8333-333333333333'::uuid, '브릿지AI', '투자 실사 자료 준비', '2026년 5월', '2026-05-23'::date, 'open'),
+    ('44444444-4444-4444-8444-444444444444'::uuid, '오르빗헬스', '법인세 기초자료 수집', '2026년 5월', '2026-05-30'::date, 'open')
+)
+INSERT INTO customer_submission_requests (id, customer_id, customer_name, request_title, request_period, due_date, status)
+SELECT rs.id, c.id, c.name, rs.request_title, rs.request_period, rs.due_date, rs.status
+FROM request_seed rs
+JOIN customers c ON c.name = rs.customer_name
 ON CONFLICT (id) DO UPDATE SET
+  customer_id = EXCLUDED.customer_id,
   customer_name = EXCLUDED.customer_name,
   request_title = EXCLUDED.request_title,
   request_period = EXCLUDED.request_period,

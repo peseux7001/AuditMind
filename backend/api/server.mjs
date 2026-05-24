@@ -623,7 +623,8 @@ const fetchCustomers = async () => {
                 COUNT(csi_recent.id) FILTER (WHERE csi_recent.status = 'not_received')::int AS missing_count
               FROM customer_submission_requests csr_recent
               LEFT JOIN customer_submission_items csi_recent ON csi_recent.request_id = csr_recent.id
-              WHERE csr_recent.customer_name = c.name
+              WHERE csr_recent.customer_id = c.id
+                OR (csr_recent.customer_id IS NULL AND csr_recent.customer_name = c.name)
               GROUP BY csr_recent.id
               ORDER BY csr_recent.created_at DESC
               LIMIT 3
@@ -645,7 +646,7 @@ const fetchCustomers = async () => {
               SELECT csr_failed.request_title, csi_failed.requested_name, csi_failed.review_message, csi_failed.updated_at
               FROM customer_submission_requests csr_failed
               JOIN customer_submission_items csi_failed ON csi_failed.request_id = csr_failed.id
-              WHERE csr_failed.customer_name = c.name
+              WHERE (csr_failed.customer_id = c.id OR (csr_failed.customer_id IS NULL AND csr_failed.customer_name = c.name))
                 AND csi_failed.status = 'rejected'
               ORDER BY csi_failed.updated_at DESC
               LIMIT 5
@@ -655,7 +656,9 @@ const fetchCustomers = async () => {
         )
       ) AS submission_summary
     FROM customers c
-    LEFT JOIN customer_submission_requests csr ON csr.customer_name = c.name
+    LEFT JOIN customer_submission_requests csr
+      ON csr.customer_id = c.id
+      OR (csr.customer_id IS NULL AND csr.customer_name = c.name)
     LEFT JOIN customer_submission_items csi ON csi.request_id = csr.id
     GROUP BY c.id, c.name
   `);
@@ -685,7 +688,7 @@ const fetchDashboardRuntime = async () => {
   const alertDays = Math.max(1, Math.min(30, Number(dueSetting.alertDays || 5)));
   const { rows: queueRows } = await pool.query(`
     SELECT
-      csr.customer_name,
+      c.name AS customer_name,
       csr.request_title,
       csr.due_date,
       csi.requested_name,
@@ -695,6 +698,9 @@ const fetchDashboardRuntime = async () => {
       dcr.raw_output
     FROM customer_submission_items csi
     JOIN customer_submission_requests csr ON csr.id = csi.request_id
+    JOIN customers c
+      ON c.id = csr.customer_id
+      OR (csr.customer_id IS NULL AND c.name = csr.customer_name)
     LEFT JOIN LATERAL (
       SELECT uploaded_at
       FROM uploaded_files uf
@@ -716,8 +722,11 @@ const fetchDashboardRuntime = async () => {
 
   const { rows: dueRows } = await pool.query(
     `
-      SELECT csr.customer_name
+      SELECT c.name AS customer_name
       FROM customer_submission_requests csr
+      JOIN customers c
+        ON c.id = csr.customer_id
+        OR (csr.customer_id IS NULL AND c.name = csr.customer_name)
       WHERE csr.status = 'open'
         AND csr.due_date IS NOT NULL
         AND csr.due_date <= (CURRENT_DATE + ($1::int * INTERVAL '1 day'))::date
@@ -727,18 +736,21 @@ const fetchDashboardRuntime = async () => {
           WHERE csi.request_id = csr.id
             AND csi.status IN ('not_received', 'processing', 'rejected')
         )
-      GROUP BY csr.customer_name
-      ORDER BY csr.customer_name ASC
+      GROUP BY c.name
+      ORDER BY c.name ASC
     `,
     [alertDays],
   );
 
   const { rows: requestRows } = await pool.query(`
-    SELECT csr.customer_name
+    SELECT c.name AS customer_name
     FROM customer_submission_requests csr
+    JOIN customers c
+      ON c.id = csr.customer_id
+      OR (csr.customer_id IS NULL AND c.name = csr.customer_name)
     WHERE csr.customer_request_status = 'submitted'
-    GROUP BY csr.customer_name
-    ORDER BY csr.customer_name ASC
+    GROUP BY c.name
+    ORDER BY c.name ASC
   `);
 
   const midnightKstQuery = `
@@ -750,6 +762,9 @@ const fetchDashboardRuntime = async () => {
     SELECT COUNT(*)::int AS count
     FROM customer_submission_items csi
     JOIN customer_submission_requests csr ON csr.id = csi.request_id
+    JOIN customers c
+      ON c.id = csr.customer_id
+      OR (csr.customer_id IS NULL AND c.name = csr.customer_name)
     LEFT JOIN LATERAL (
       SELECT uploaded_at
       FROM uploaded_files uf
@@ -818,7 +833,8 @@ const fetchReviewItems = async () => {
       csi.review_message,
       csi.internal_memo,
       csi.customer_comment,
-      csr.customer_name,
+      c.id AS customer_id,
+      c.name AS customer_name,
       csr.request_title,
       csr.customer_request_message,
       csr.customer_request_status,
@@ -837,6 +853,9 @@ const fetchReviewItems = async () => {
       COALESCE(dcr.raw_output->>'processingResultPath', '') AS processing_result_path
     FROM customer_submission_items csi
     JOIN customer_submission_requests csr ON csr.id = csi.request_id
+    JOIN customers c
+      ON c.id = csr.customer_id
+      OR (csr.customer_id IS NULL AND c.name = csr.customer_name)
     LEFT JOIN LATERAL (
       SELECT *
       FROM uploaded_files uf
@@ -852,7 +871,7 @@ const fetchReviewItems = async () => {
       LIMIT 1
     ) dcr ON true
     WHERE csi.status IN ('not_received', 'processing', 'approved', 'submitted', 'rejected')
-    ORDER BY csi.sort_order ASC, csr.customer_name ASC, csr.request_title ASC, csi.created_at ASC
+    ORDER BY csi.sort_order ASC, c.name ASC, csr.request_title ASC, csi.created_at ASC
   `);
   return Promise.all(rows.map(async (row) => mapReviewRow(row, await uploadedFileExists(row))));
 };
@@ -1108,18 +1127,21 @@ const fetchPortalRequestByToken = async (rawToken) => {
   const { rows: requestRows } = await pool.query(
     `
       SELECT
-        id,
-        customer_name,
-        request_title,
-        request_period,
-        due_date,
-        COALESCE(to_char(due_date, 'YYYY-MM-DD'), '') AS due_date_label,
-        created_at,
-        status,
-        customer_request_message,
-        customer_request_status
-      FROM customer_submission_requests
-      WHERE id = $1
+        csr.id,
+        COALESCE(c.name, csr.customer_name) AS customer_name,
+        csr.request_title,
+        csr.request_period,
+        csr.due_date,
+        COALESCE(to_char(csr.due_date, 'YYYY-MM-DD'), '') AS due_date_label,
+        csr.created_at,
+        csr.status,
+        csr.customer_request_message,
+        csr.customer_request_status
+      FROM customer_submission_requests csr
+      JOIN customers c
+        ON c.id = csr.customer_id
+        OR (csr.customer_id IS NULL AND c.name = csr.customer_name)
+      WHERE csr.id = $1
     `,
     [requestId],
   );
@@ -1340,6 +1362,7 @@ const createSubmissionRequests = async (payload = {}) => {
       const { rows: requestRows } = await client.query(
         `
           INSERT INTO customer_submission_requests (
+            customer_id,
             customer_name,
             request_title,
             request_period,
@@ -1347,10 +1370,11 @@ const createSubmissionRequests = async (payload = {}) => {
             status,
             request_template_id
           )
-          VALUES ($1, $2, $3, $4::date, 'open', $5)
+          VALUES ($1, $2, $3, $4, $5::date, 'open', $6)
           RETURNING id
         `,
         [
+          customer.id,
           customer.name,
           requestTitle,
           requestPeriod,

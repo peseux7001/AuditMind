@@ -36,3 +36,9 @@ FROM (
 ) AS v(customer_name, name, title, phone, email, is_primary)
 JOIN customers c ON c.name = v.customer_name
 WHERE NOT EXISTS (SELECT 1 FROM customer_contacts);
+
+UPDATE customer_submission_requests csr
+SET customer_id = c.id
+FROM customers c
+WHERE csr.customer_id IS NULL
+  AND csr.customer_name = c.name;

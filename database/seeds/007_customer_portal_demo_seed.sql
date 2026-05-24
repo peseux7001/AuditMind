@@ -3,6 +3,7 @@
 
 INSERT INTO customer_submission_requests (
   id,
+  customer_id,
   customer_name,
   request_title,
   request_period,
@@ -13,6 +14,7 @@ INSERT INTO customer_submission_requests (
 )
 VALUES (
   '77777777-7777-4777-8777-777777777777',
+  (SELECT id FROM customers WHERE name = '샘플테크 주식회사' LIMIT 1),
   '샘플테크 주식회사',
   '2025년 1기 부가가치세 신고 검토 자료 제출 요청',
   '2025년 1기',
@@ -22,6 +24,7 @@ VALUES (
   'draft'
 )
 ON CONFLICT (id) DO UPDATE SET
+  customer_id = EXCLUDED.customer_id,
   customer_name = EXCLUDED.customer_name,
   request_title = EXCLUDED.request_title,
   request_period = EXCLUDED.request_period,

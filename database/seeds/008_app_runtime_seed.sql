@@ -50,7 +50,7 @@ INSERT INTO accountant_notifications (
 )
 SELECT
   '자료 접수',
-  csr.customer_name,
+  c.name,
   csi.requested_name,
   'review-ready',
   'customer_submission_item',
@@ -58,6 +58,9 @@ SELECT
   COALESCE(uf.uploaded_at, csi.updated_at, now())
 FROM customer_submission_items csi
 JOIN customer_submission_requests csr ON csr.id = csi.request_id
+JOIN customers c
+  ON c.id = csr.customer_id
+  OR (csr.customer_id IS NULL AND c.name = csr.customer_name)
 LEFT JOIN LATERAL (
   SELECT uploaded_at
   FROM uploaded_files uf

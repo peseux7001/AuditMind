@@ -200,6 +200,8 @@ Customer master rules:
 - `customers.created_by_user_id`, `customers.updated_by_user_id`, `customer_contacts.created_by_user_id`, and `customer_contacts.updated_by_user_id` are text user identifiers for now. They intentionally do not reference a login user table yet.
 - Use `system` for seed/system-created rows until the authentication model is introduced.
 - Generated `AI 고객사 분석` is persisted in `customer_ai_analyses`. The customer management screen reads stored analysis first and regenerates/saves only when no stored analysis exists or customer data changes.
+- `customer_submission_requests.customer_id` links every 자료제출 요청 to `customers.id`. `customer_name` is kept only as a display/legacy fallback.
+- 자료제출 요청, 제출자료 검토, 대시보드, 고객 포털 token lookup must join through live `customers` rows. If a customer is deleted, linked submission requests cascade away and should not keep appearing as orphan review work.
 
 Submission review rules:
 
