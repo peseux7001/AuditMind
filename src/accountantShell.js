@@ -58,18 +58,19 @@ const shellContent = {
     { label: "자료제출 요청", href: "/?page=submission-requests", page: "submission-requests", count: "" },
     { label: "제출자료 검토", href: "/?page=review", page: "review", count: "" },
     { label: "서비스 관리", href: "/?page=templates", page: "templates", count: "" },
-    { label: "자료 제출 포털 미리보기", href: "/submit/mvp-demo", page: "customer-test", count: "" },
+    { label: "자료 제출 포털 미리보기 (고객용 데모)", href: "/submit/mvp-demo", page: "customer-test", count: "", separated: true },
   ],
   notifications: [],
+  latestSubmissionPortalUrl: "/submit/mvp-demo",
 };
 
 let timestampTimer;
 
 const getLatestSubmissionPortalUrl = () => {
   try {
-    return window.localStorage.getItem("auditmind.latestSubmissionPortalUrl") || "/submit/mvp-demo";
+    return window.localStorage.getItem("auditmind.latestSubmissionPortalUrl") || shellContent.latestSubmissionPortalUrl || "/submit/mvp-demo";
   } catch {
-    return "/submit/mvp-demo";
+    return shellContent.latestSubmissionPortalUrl || "/submit/mvp-demo";
   }
 };
 
@@ -221,6 +222,11 @@ const attachShellInteractions = (app) => {
         renderNotificationList();
         updateTimestamp();
       }
+      if (payload.latestSubmissionPortalUrl) {
+        shellContent.latestSubmissionPortalUrl = payload.latestSubmissionPortalUrl;
+        const demoLink = app.querySelector("[data-customer-portal-preview-link]");
+        demoLink?.setAttribute("href", getLatestSubmissionPortalUrl());
+      }
     } catch {
       // Keep local fallback shell state when the API is unavailable.
     }
@@ -321,10 +327,11 @@ export const renderAccountantShell = ({ app, activePage, eyebrow, title, bodyHtm
                 const isActive = item.page === activePage;
                 const href = item.page === "customer-test" ? getLatestSubmissionPortalUrl() : item.href || "#";
                 return `
+                  ${item.separated ? `<div class="my-2 border-t border-white/15" aria-hidden="true"></div>` : ""}
                   <a class="${cx(
                     "flex min-h-10 items-center justify-between rounded-md px-3 text-sm font-semibold transition-colors",
                     isActive ? "bg-white text-[#043873]" : "text-white/75 hover:bg-white/10 hover:text-white",
-                  )}" href="${escapeHtml(href)}" aria-current="${isActive ? "page" : "false"}">
+                  )}" href="${escapeHtml(href)}" aria-current="${isActive ? "page" : "false"}" ${item.page === "customer-test" ? "data-customer-portal-preview-link" : ""}>
                     <span>${escapeHtml(item.label)}</span>
                     ${item.count ? `<span class="${cx(componentClasses.pill, isActive ? "bg-[#eef6ff] text-[#043873]" : "bg-white/12 text-white")}">${escapeHtml(item.count)}</span>` : ""}
                   </a>

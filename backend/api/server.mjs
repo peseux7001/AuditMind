@@ -203,6 +203,9 @@ const fetchShellRuntime = async () => {
     logoImage: "/brand/auditmind-logo.png",
     logoAlt: "AuditMind",
   });
+  const portalPreview = await readAppSetting("submission.latestPortalPreview", {
+    url: "/submit/mvp-demo",
+  });
   const { rows } = await pool.query(`
     SELECT id, type, title, detail, kind, received_at
     FROM accountant_notifications
@@ -211,6 +214,7 @@ const fetchShellRuntime = async () => {
   `);
   return {
     brand,
+    latestSubmissionPortalUrl: portalPreview.url || "/submit/mvp-demo",
     notifications: rows.map((row) => ({
       id: row.id,
       type: row.type,
@@ -1464,6 +1468,35 @@ const createSubmissionRequests = async (payload = {}) => {
         sendMethods,
       });
     }
+
+    const latestPortalUrl = createdRequests[0]?.url || "/submit/mvp-demo";
+    await client.query(
+      `
+        INSERT INTO app_settings (key, value, description, updated_by_user_id)
+        VALUES (
+          'submission.latestPortalPreview',
+          $1::jsonb,
+          'Latest generated customer submission portal URL for MVP preview navigation.',
+          $2
+        )
+        ON CONFLICT (key)
+        DO UPDATE SET
+          value = EXCLUDED.value,
+          description = EXCLUDED.description,
+          updated_at = now(),
+          updated_by_user_id = EXCLUDED.updated_by_user_id
+      `,
+      [
+        JSON.stringify({
+          url: latestPortalUrl,
+          requestId: createdRequests[0]?.requestId || "",
+          customerId: createdRequests[0]?.customerId || "",
+          customerName: createdRequests[0]?.customerName || "",
+          updatedAt: new Date().toISOString(),
+        }),
+        currentUserId,
+      ],
+    );
 
     await client.query("COMMIT");
     return { requests: createdRequests };
