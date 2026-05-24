@@ -395,7 +395,16 @@ const renderContactRows = (contacts, selectedContactIds = new Set()) =>
         .join("")
     : `<tr><td class="px-2 py-6 text-center text-xs text-[#717171]" colspan="5">등록된 담당자가 없습니다.</td></tr>`;
 
-const renderCustomerEditor = (selectedCustomer, canDelete, isDirty = false, saveMessageVisible = false, selectedContactIds = new Set()) => `
+const renderEmptyCustomerEditor = () => `
+  <section class="${cx(componentClasses.surface, "flex h-full min-h-0 items-center justify-center overflow-hidden p-8 text-center")}" aria-label="고객사 없음">
+    <div>
+      <h3 class="text-base font-semibold text-[#2a2a2a]">등록된 고객사가 없습니다.</h3>
+      <p class="mt-2 text-sm leading-6 text-[#717171]">신규 고객사 추가 버튼으로 고객사를 등록해 주세요.</p>
+    </div>
+  </section>
+`;
+
+const renderCustomerEditor = (selectedCustomer, isDirty = false, saveMessageVisible = false, selectedContactIds = new Set()) => `
   <section class="${cx(componentClasses.surface, "flex h-full min-h-0 flex-col overflow-hidden")}" aria-labelledby="customer-editor-title">
     <div class="flex min-h-[73px] items-center justify-between gap-3 border-b border-[#e6e6e6] bg-[#fafafa] p-4">
       <div>
@@ -404,7 +413,7 @@ const renderCustomerEditor = (selectedCustomer, canDelete, isDirty = false, save
       <div class="flex shrink-0 items-center gap-2">
         <span class="${cx("text-xs font-semibold text-[#107c10]", saveMessageVisible ? "" : "invisible")}" data-save-customer-message>저장되었습니다.</span>
         <button class="${getButtonClass({ variant: "primary", size: "md" })}" type="button" data-save-customer ${isDirty ? "" : "disabled"}>저장</button>
-        <button class="${getButtonClass({ variant: "secondary", size: "md" })} border-[#f1b8be] text-[#a4262c] hover:bg-[#fff4f5]" type="button" data-open-delete-customer-dialog ${canDelete ? "" : "disabled"}>고객사 삭제</button>
+        <button class="${getButtonClass({ variant: "secondary", size: "md" })} border-[#f1b8be] text-[#a4262c] hover:bg-[#fff4f5]" type="button" data-open-delete-customer-dialog>고객사 삭제</button>
       </div>
     </div>
 
@@ -623,7 +632,7 @@ const renderDeleteCustomerDialog = ({ step, selectedCustomer }) => {
 };
 
 const renderDeleteContactDialog = ({ isOpen, selectedCustomer, selectedContactIds }) => {
-  if (!isOpen) return "";
+  if (!isOpen || !selectedCustomer) return "";
 
   const selectedContacts = selectedCustomer.contacts.filter((contact) => selectedContactIds.has(contact.id));
   const names = selectedContacts.map((contact) => contact.name || "이름 미입력").join(", ");
@@ -649,8 +658,7 @@ const renderDeleteContactDialog = ({ isOpen, selectedCustomer, selectedContactId
 
 const renderCustomerManagementBody = (customers, selectedId, dialogs = {}, dirtyCustomerIds = new Set(), saveMessageVisible = false) => {
   const selectedCustomer = customers.find((customer) => customer.id === selectedId) || customers[0];
-  const canDelete = customers.length > 1;
-  const isDirty = dirtyCustomerIds.has(selectedCustomer.id);
+  const isDirty = selectedCustomer ? dirtyCustomerIds.has(selectedCustomer.id) : false;
   const selectedContactIds = dialogs.selectedContactIds || new Set();
 
   return `
@@ -677,19 +685,23 @@ const renderCustomerManagementBody = (customers, selectedId, dialogs = {}, dirty
         <div class="min-h-0 flex-1 overflow-y-auto">
           <table class="w-full table-fixed border-collapse text-left text-xs">
             <tbody class="divide-y divide-[#e6e6e6]" data-customer-table-body>
-              ${renderCustomerRows(customers, selectedCustomer.id)}
+              ${
+                customers.length
+                  ? renderCustomerRows(customers, selectedCustomer?.id)
+                  : `<tr><td class="px-2 py-8 text-center text-xs text-[#717171]" colspan="3">등록된 고객사가 없습니다.</td></tr>`
+              }
             </tbody>
           </table>
         </div>
       </section>
 
       <div class="min-h-0" data-customer-editor>
-        ${renderCustomerEditor(selectedCustomer, canDelete, isDirty, saveMessageVisible, selectedContactIds)}
+        ${selectedCustomer ? renderCustomerEditor(selectedCustomer, isDirty, saveMessageVisible, selectedContactIds) : renderEmptyCustomerEditor()}
       </div>
     </section>
     ${renderAddCustomerDialog({ isOpen: dialogs.addCustomerOpen })}
-    ${renderAddContactDialog({ isOpen: dialogs.addContactOpen, selectedCustomer })}
-    ${renderDeleteCustomerDialog({ step: dialogs.deleteCustomerStep || 0, selectedCustomer })}
+    ${selectedCustomer ? renderAddContactDialog({ isOpen: dialogs.addContactOpen, selectedCustomer }) : ""}
+    ${selectedCustomer ? renderDeleteCustomerDialog({ step: dialogs.deleteCustomerStep || 0, selectedCustomer }) : ""}
     ${renderDeleteContactDialog({ isOpen: dialogs.deleteContactOpen, selectedCustomer, selectedContactIds })}
   `;
 };
@@ -862,7 +874,6 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
     });
 
     app.querySelector("[data-open-delete-customer-dialog]")?.addEventListener("click", () => {
-      if (customers.length <= 1) return;
       deleteCustomerStep = 1;
       addCustomerOpen = false;
       addContactOpen = false;
@@ -1054,7 +1065,7 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
 
     app.querySelector("[data-confirm-delete-customer]")?.addEventListener("click", () => {
       const currentId = selectedId;
-      if (!currentId || customers.length <= 1) return;
+      if (!currentId) return;
       deleteCustomerFromApi(currentId)
         .then(() => {
           customers = customers.filter((customer) => customer.id !== currentId);
