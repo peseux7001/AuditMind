@@ -37,9 +37,4 @@ FROM (
     ('오르빗헬스', '정다은', '운영매니저', '010-4567-8901', 'ops@orbithealth.kr', true)
 ) AS v(customer_name, name, title, phone, email, is_primary)
 JOIN customers c ON c.name = v.customer_name
-WHERE NOT EXISTS (
-  SELECT 1
-  FROM customer_contacts cc
-  WHERE cc.customer_id = c.id
-    AND cc.email = v.email
-);
+WHERE NOT EXISTS (SELECT 1 FROM customer_contacts);
