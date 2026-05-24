@@ -82,6 +82,7 @@ const getCustomerSubmissionSummary = (customer) => ({
 });
 
 const buildCustomerAnalysisSourceSnapshot = (customer) => ({
+  analysisVersion: "customer-analysis-v2",
   company: customer.company,
   businessNumber: customer.businessNumber,
   ceoName: customer.ceoName,
@@ -781,7 +782,7 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
 
     customerAnalysisTimer = window.setTimeout(async () => {
       const timeoutController = new AbortController();
-      const timeoutId = window.setTimeout(() => timeoutController.abort(), 3200);
+      const timeoutId = window.setTimeout(() => timeoutController.abort(), 25000);
       signal.addEventListener("abort", () => timeoutController.abort(), { once: true });
 
       try {
@@ -797,10 +798,6 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
         clearTimeout(timeoutId);
         if (signal.aborted) return;
         const fallback = buildCustomerAnalysisFallback(customer);
-        customerAnalysisCache.set(customer.id, { snapshot: currentSnapshot, text: fallback });
-        customer.aiAnalysis = fallback;
-        customer.aiAnalysisSourceSnapshot = currentSnapshot;
-        saveCustomerAiAnalysisToApi(customer, fallback).catch(() => {});
         streamCustomerAnalysis(target, fallback);
       }
     }, 320);
