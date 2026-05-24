@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AuditMind — Better Evidence, PwC-ready Growth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#D04A02;
+  --orange-dark:#B03A00;
+  --orange-light:#FDF2EE;
+  --black:#1A1A1A;
+  --gray-dark:#2D2D2D;
+  --gray-mid:#595959;
+  --gray-light:#767676;
+  --gray-100:#F5F5F5;
+  --gray-200:#EBEBEB;
+  --gray-300:#D0D0D0;
+  --white:#FFFFFF;
+  --border:#E0E0E0;
+  --font-heading:'Noto Serif KR', Georgia, serif;
+  --font-body:'Noto Sans KR', Arial, sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--white);color:var(--gray-dark);overflow-x:hidden;font-size:15px;line-height:1.7}
+
+/* ===== NAV ===== */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:500;
+  background:var(--white);
+  border-bottom:1px solid var(--border);
+  transition:box-shadow .3s;
+}
+nav.scrolled{box-shadow:0 2px 12px rgba(0,0,0,.1)}
+.nav-top{
+  display:flex;align-items:center;
+  padding:0 48px;height:64px;
+  border-bottom:3px solid var(--orange);
+}
+.nav-logo{
+  display:flex;align-items:center;gap:10px;text-decoration:none;
+}
+.nav-logo-mark{
+  font-family:var(--font-body);font-size:15px;font-weight:700;
+  color:var(--black);letter-spacing:-.5px;
+}
+.nav-logo-mark em{color:var(--orange);font-style:normal}
+.nav-divider{width:1px;height:22px;background:var(--gray-300);margin:0 12px}
+.nav-sub-brand{font-size:13px;color:var(--gray-mid);font-weight:400}
+.nav-links{display:flex;gap:0;margin-left:auto;align-items:center;height:64px}
+.nav-links a{
+  font-size:13px;color:var(--gray-dark);text-decoration:none;
+  padding:0 18px;height:100%;display:flex;align-items:center;
+  border-bottom:3px solid transparent;margin-bottom:-3px;
+  transition:color .2s,border-color .2s;font-weight:400;
+}
+.nav-links a:hover{color:var(--orange);border-bottom-color:var(--orange)}
+.nav-links a.active{color:var(--orange);border-bottom-color:var(--orange)}
+.nav-cta{
+  margin-left:20px;
+  font-size:13px;font-weight:600;
+  background:var(--orange);color:var(--white);
+  padding:10px 24px;text-decoration:none;
+  transition:background .2s;letter-spacing:.2px;
+  white-space:nowrap;
+}
+.nav-cta:hover{background:var(--orange-dark)}
+
+/* ===== HERO ===== */
+.hero{
+  position:relative;min-height:100vh;
+  display:flex;align-items:center;
+  margin-top:64px;overflow:hidden;
+  background:#0f0f0f;
+}
+.hero-bg-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;opacity:.45;
+}
+/* PwC orange parallelogram graphic */
+.hero-graphic{
+  position:absolute;right:0;top:0;bottom:0;width:50%;
+  display:flex;align-items:center;justify-content:center;pointer-events:none;
+}
+.hero-graphic::before{
+  content:'';
+  position:absolute;right:-60px;top:50%;transform:translateY(-50%) skewX(-12deg);
+  width:480px;height:280px;
+  background:var(--orange);opacity:.18;
+}
+.hero-graphic::after{
+  content:'';
+  position:absolute;right:60px;top:50%;transform:translateY(-50%) skewX(-12deg);
+  width:320px;height:180px;
+  background:var(--orange);opacity:.22;
+}
+.hero-inner{
+  position:relative;z-index:2;
+  max-width:1200px;margin:0 auto;width:100%;
+  padding:80px 48px;
+  display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;
+}
+.hero-content{}
+.hero-eyebrow{
+  display:inline-block;
+  font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+  color:var(--orange);margin-bottom:20px;
+  opacity:0;animation:fadeUp .7s .2s forwards;
+}
+.hero-h1{
+  font-family:var(--font-heading);
+  font-size:clamp(40px,5.5vw,72px);
+  line-height:1.08;letter-spacing:-1.5px;
+  color:var(--white);font-weight:700;
+  margin-bottom:24px;
+  opacity:0;animation:fadeUp .7s .35s forwards;
+}
+.hero-h1 em{color:var(--orange);font-style:italic}
+.hero-desc{
+  font-size:16px;color:rgba(255,255,255,.78);line-height:1.8;
+  margin-bottom:36px;
+  opacity:0;animation:fadeUp .7s .5s forwards;
+}
+.hero-btn-row{
+  display:flex;gap:16px;align-items:center;
+  opacity:0;animation:fadeUp .7s .65s forwards;
+}
+.btn-primary{
+  font-size:14px;font-weight:600;
+  background:var(--orange);color:var(--white);
+  border:none;padding:14px 32px;cursor:pointer;
+  letter-spacing:.3px;transition:background .2s;
+}
+.btn-primary:hover{background:var(--orange-dark)}
+.btn-ghost{
+  font-size:13px;color:rgba(255,255,255,.85);
+  border:1px solid rgba(255,255,255,.4);
+  padding:13px 28px;cursor:pointer;
+  letter-spacing:.3px;transition:all .2s;background:transparent;
+}
+.btn-ghost:hover{border-color:var(--white);color:var(--white)}
+.hero-stats{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;
+  border-top:1px solid rgba(255,255,255,.15);
+  margin-top:48px;padding-top:36px;
+  opacity:0;animation:fadeUp .7s .8s forwards;
+}
+.hero-stat{padding:0 24px 0 0}
+.hero-stat + .hero-stat{padding-left:24px;border-left:1px solid rgba(255,255,255,.15)}
+.hero-stat .sv{
+  font-family:var(--font-heading);font-size:42px;color:var(--orange);
+  line-height:1;font-weight:700;
+}
+.hero-stat .sl{font-size:12px;color:rgba(255,255,255,.6);margin-top:6px;line-height:1.5}
+
+/* Hero right: floating feature card */
+.hero-card{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.15);
+  backdrop-filter:blur(8px);
+  padding:32px;
+  opacity:0;animation:fadeUp .7s .6s forwards;
+}
+.hero-card-tag{
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--orange);margin-bottom:16px;
+}
+.hero-card-title{
+  font-family:var(--font-heading);font-size:22px;font-weight:700;
+  color:var(--white);margin-bottom:12px;line-height:1.3;
+}
+.hero-card-desc{font-size:13px;color:rgba(255,255,255,.7);line-height:1.7;margin-bottom:24px}
+.hero-card-pills{display:flex;flex-direction:column;gap:10px}
+.hero-pill{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  font-size:13px;color:rgba(255,255,255,.85);
+}
+.hero-pill-dot{
+  width:8px;height:8px;background:var(--orange);flex-shrink:0;
+}
+.hero-pill strong{color:var(--white);font-weight:600}
+
+/* ===== SECTION COMMONS ===== */
+section{padding:80px 0;position:relative}
+.section-inner{max-width:1200px;margin:0 auto;padding:0 48px}
+.section-label{
+  font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--orange);margin-bottom:12px;
+  display:flex;align-items:center;gap:10px;
+}
+.section-label::before{content:'';width:20px;height:2px;background:var(--orange)}
+.section-title{
+  font-family:var(--font-heading);
+  font-size:clamp(28px,3.5vw,44px);
+  line-height:1.12;letter-spacing:-1px;
+  color:var(--black);font-weight:700;margin-bottom:16px;
+}
+.section-title em{color:var(--orange);font-style:italic}
+.section-desc{font-size:16px;color:var(--gray-mid);max-width:600px;line-height:1.8;margin-bottom:48px}
+.section-divider{border:none;border-top:1px solid var(--border);max-width:1200px;margin:0 auto 0}
+
+/* ===== IMAGE+TEXT SPLIT ===== */
+.split-section{padding:0}
+.split-row{
+  display:grid;grid-template-columns:1fr 1fr;min-height:480px;
+}
+.split-row.reverse{direction:rtl}
+.split-row.reverse > *{direction:ltr}
+.split-img{
+  position:relative;overflow:hidden;background:#ccc;
+}
+.split-img img{width:100%;height:100%;object-fit:cover;display:block}
+/* Orange parallelogram overlay on images */
+.split-img::after{
+  content:'';
+  position:absolute;bottom:0;left:0;right:0;height:4px;
+  background:var(--orange);
+}
+.split-img.with-graphic::before{
+  content:'';
+  position:absolute;top:50%;right:-30px;transform:translateY(-50%) skewX(-10deg);
+  width:120px;height:200px;background:var(--orange);opacity:.25;z-index:1;
+}
+.split-content{
+  background:var(--white);
+  padding:52px 48px;
+  display:flex;flex-direction:column;justify-content:center;
+  min-width:0;
+}
+.split-content.gray-bg{background:var(--gray-100)}
+
+/* ===== IMAGE CARDS (PwC style) ===== */
+.card-grid{display:grid;gap:1px;background:var(--border)}
+.card-grid.cols-3{grid-template-columns:repeat(3,1fr)}
+.card-grid.cols-4{grid-template-columns:repeat(4,1fr)}
+.img-card{
+  background:var(--white);overflow:hidden;
+  display:flex;flex-direction:column;
+  transition:box-shadow .25s;cursor:pointer;
+}
+.img-card:hover .img-card-photo img{transform:scale(1.04)}
+.img-card:hover .img-card-link{color:var(--orange-dark)}
+.img-card-photo{
+  position:relative;overflow:hidden;
+  aspect-ratio:16/10;background:#ddd;flex-shrink:0;
+}
+.img-card-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s}
+/* Orange overlay bar on card image - PwC style */
+.img-card-photo::after{
+  content:'';
+  position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:var(--orange);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .3s;
+}
+.img-card:hover .img-card-photo::after{transform:scaleX(1)}
+.img-card-body{padding:24px 20px 28px;flex:1;display:flex;flex-direction:column}
+.img-card-label{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--orange);margin-bottom:8px;
+}
+.img-card-title{
+  font-family:var(--font-heading);font-size:17px;font-weight:700;
+  color:var(--black);line-height:1.35;margin-bottom:10px;
+}
+.img-card-desc{font-size:13px;color:var(--gray-mid);line-height:1.6;flex:1}
+.img-card-link{
+  margin-top:16px;font-size:13px;font-weight:600;
+  color:var(--orange);display:flex;align-items:center;gap:6px;
+  transition:color .2s;
+}
+.img-card-link::after{content:'→'}
+
+/* ===== STEP CARDS ===== */
+.step-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border)}
+.step-card{
+  background:var(--white);padding:32px 24px;
+  position:relative;
+}
+.step-card.active{background:var(--orange)}
+.step-num{
+  font-family:var(--font-heading);font-size:48px;font-weight:700;
+  color:var(--gray-200);line-height:1;margin-bottom:16px;
+}
+.step-card.active .step-num{color:rgba(255,255,255,.3)}
+.step-card-label{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--orange);margin-bottom:8px;
+}
+.step-card.active .step-card-label{color:rgba(255,255,255,.8)}
+.step-card-title{font-size:15px;font-weight:700;color:var(--black);margin-bottom:8px;line-height:1.3}
+.step-card.active .step-card-title{color:var(--white)}
+.step-card-desc{font-size:13px;color:var(--gray-mid);line-height:1.6}
+.step-card.active .step-card-desc{color:rgba(255,255,255,.8)}
+
+/* ===== STAT BAND ===== */
+.stat-band{
+  background:var(--black);padding:64px 0;
+}
+.stat-band-inner{
+  max-width:1200px;margin:0 auto;padding:0 48px;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.1);
+}
+.stat-band-item{
+  background:var(--black);padding:36px 32px;
+  border-right:1px solid rgba(255,255,255,.1);
+  text-align:center;
+}
+.stat-band-item:last-child{border-right:none}
+.stat-band-num{
+  font-family:var(--font-heading);font-size:52px;font-weight:700;
+  color:var(--orange);line-height:1;margin-bottom:10px;
+}
+.stat-band-label{font-size:13px;color:rgba(255,255,255,.65);line-height:1.5}
+
+/* ===== HIGHLIGHT BANNER (full-width image with text overlay) ===== */
+.banner-section{
+  position:relative;overflow:hidden;
+  min-height:400px;display:flex;align-items:center;
+}
+.banner-bg{
+  position:absolute;inset:0;
+  background:#1a1a1a;
+}
+.banner-bg img{width:100%;height:100%;object-fit:cover;opacity:.4}
+/* PwC orange parallelogram on banner */
+.banner-graphic{
+  position:absolute;right:0;top:0;bottom:0;width:45%;pointer-events:none;
+}
+.banner-graphic::before{
+  content:'';position:absolute;
+  right:-80px;top:0;bottom:0;
+  width:60%;background:var(--orange);
+  clip-path:polygon(20% 0,100% 0,100% 100%,0% 100%);
+  opacity:.85;
+}
+.banner-inner{
+  position:relative;z-index:2;
+  max-width:1200px;margin:0 auto;padding:64px 48px;
+  width:100%;
+}
+.banner-title{
+  font-family:var(--font-heading);
+  font-size:clamp(28px,3.5vw,48px);
+  font-weight:700;color:var(--white);
+  line-height:1.1;letter-spacing:-1px;
+  max-width:560px;margin-bottom:20px;
+}
+.banner-title em{font-style:italic}
+.banner-desc{font-size:16px;color:rgba(255,255,255,.8);max-width:480px;line-height:1.8;margin-bottom:32px}
+.banner-btn{
+  display:inline-block;
+  font-size:13px;font-weight:600;
+  color:var(--black);background:var(--white);
+  padding:13px 28px;text-decoration:none;
+  transition:background .2s;border:none;cursor:pointer;letter-spacing:.3px;
+}
+.banner-btn:hover{background:#e8e8e8}
+
+/* ===== QUOTE CARD ===== */
+.quote-card{
+  border-left:4px solid var(--orange);
+  background:var(--gray-100);
+  padding:36px 40px;
+  margin:0;
+}
+.quote-text{
+  font-family:var(--font-heading);font-size:20px;
+  font-style:italic;color:var(--black);
+  line-height:1.6;margin-bottom:16px;
+}
+.quote-source{font-size:13px;color:var(--gray-mid);font-weight:600}
+
+/* ===== PAIN VISUAL ===== */
+.pain-flow{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);margin-bottom:48px;
+}
+.pain-step{
+  background:var(--white);padding:28px 24px;
+  border-top:3px solid var(--gray-200);
+  transition:border-color .2s;
+}
+.pain-step.highlight{
+  background:#FEF5F2;
+  border-top-color:var(--orange);
+}
+.pain-step-num{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--gray-light);margin-bottom:10px}
+.pain-step.highlight .pain-step-num{color:var(--orange)}
+.pain-step-title{font-size:15px;font-weight:700;color:var(--black);margin-bottom:6px}
+.pain-step.highlight .pain-step-title{color:var(--orange)}
+.pain-step-desc{font-size:12px;color:var(--gray-mid);line-height:1.6}
+
+/* ===== TRANSLATION BOX ===== */
+.trans-box{
+  background:var(--gray-100);border-left:4px solid var(--orange);
+  padding:28px 32px;margin-bottom:32px;
+}
+.trans-box-label{
+  font-size:10px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--orange);margin-bottom:14px;
+}
+.trans-row{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px;background:var(--white);
+  border:1px solid var(--border);margin-bottom:8px;
+  font-size:12px;flex-wrap:nowrap;
+}
+.trans-row:last-child{margin-bottom:0}
+.trans-before{color:var(--gray-light);text-decoration:line-through;white-space:nowrap;flex-shrink:0}
+.trans-arrow{color:var(--orange);font-weight:700;font-size:14px;flex-shrink:0}
+.trans-after{color:var(--orange);font-weight:600;white-space:nowrap}
+
+/* ===== LEARN SECTION ===== */
+.timeline-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);margin-bottom:48px;
+}
+.timeline-item{
+  background:var(--white);padding:36px 28px;
+  position:relative;
+}
+.timeline-num{
+  font-family:var(--font-heading);font-size:64px;font-weight:700;
+  line-height:1;margin-bottom:20px;
+}
+.timeline-item:nth-child(1) .timeline-num{color:#F5C4B8}
+.timeline-item:nth-child(2) .timeline-num{color:#FAD5C0}
+.timeline-item:nth-child(3) .timeline-num{color:#B8DFC8}
+.timeline-tag{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;margin-bottom:10px;
+}
+.timeline-item:nth-child(1) .timeline-tag{color:#C03000}
+.timeline-item:nth-child(2) .timeline-tag{color:var(--orange)}
+.timeline-item:nth-child(3) .timeline-tag{color:#0D7A3E}
+.timeline-title{font-size:17px;font-weight:700;color:var(--black);margin-bottom:10px}
+.timeline-desc{font-size:13px;color:var(--gray-mid);line-height:1.7}
+.timeline-list{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:6px}
+.timeline-list li{
+  font-size:12px;color:var(--gray-mid);
+  padding-left:16px;position:relative;line-height:1.5;
+}
+.timeline-list li::before{content:'—';position:absolute;left:0;color:var(--orange)}
+
+/* ===== FEATURE INLINE CARDS ===== */
+.feature-strip{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.feature-card{
+  display:flex;gap:16px;align-items:flex-start;
+  padding:20px;background:var(--gray-100);
+  border-left:3px solid var(--orange);
+}
+.feature-icon{
+  width:40px;height:40px;background:var(--orange);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--white);font-size:16px;flex-shrink:0;
+}
+.feature-title{font-size:14px;font-weight:700;color:var(--black);margin-bottom:4px}
+.feature-desc{font-size:12px;color:var(--gray-mid);line-height:1.6}
+
+/* ===== AX / ROADMAP SECTION ===== */
+.roadmap-row{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);margin-bottom:48px;
+}
+.roadmap-card{
+  background:var(--white);padding:32px 28px;
+  border-top:3px solid var(--gray-200);
+  transition:border-top-color .2s,background .2s;
+}
+.roadmap-card:hover{border-top-color:var(--orange);background:#FFFAF8}
+.roadmap-label{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--orange);margin-bottom:10px;
+}
+.roadmap-title{font-size:16px;font-weight:700;color:var(--black);margin-bottom:8px}
+.roadmap-desc{font-size:13px;color:var(--gray-mid);line-height:1.7}
+
+/* ===== REVEAL ANIMATIONS ===== */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .55s,transform .55s}
+.reveal.visible{opacity:1;transform:none}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+.reveal-delay-4{transition-delay:.4s}
+
+/* ===== FOOTER ===== */
+footer{
+  background:var(--black);
+  border-top:3px solid var(--orange);
+}
+.footer-top{
+  max-width:1200px;margin:0 auto;padding:48px 48px 32px;
+  display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px;
+}
+.footer-brand{}
+.footer-logo{
+  font-family:var(--font-heading);font-size:20px;font-weight:700;
+  color:var(--white);margin-bottom:12px;
+}
+.footer-logo span{color:var(--orange)}
+.footer-tagline{font-size:13px;color:rgba(255,255,255,.5);line-height:1.6}
+.footer-col-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:16px}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:10px}
+.footer-links a{font-size:13px;color:rgba(255,255,255,.65);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--orange)}
+.footer-bottom{
+  border-top:1px solid rgba(255,255,255,.1);
+  max-width:1200px;margin:0 auto;padding:20px 48px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.footer-copy{font-size:12px;color:rgba(255,255,255,.35)}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1024px){
+  .hero-inner{grid-template-columns:1fr;gap:40px}
+  .hero-card{display:none}
+  .split-row{grid-template-columns:1fr}
+  .split-img{aspect-ratio:16/9}
+  .step-grid{grid-template-columns:1fr 1fr}
+  .stat-band-inner{grid-template-columns:1fr 1fr}
+  .roadmap-row{grid-template-columns:1fr}
+  .timeline-grid{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .nav-top{padding:0 20px}
+  .section-inner{padding:0 20px}
+  section{padding:56px 0}
+  .hero-inner{padding:60px 20px}
+  .split-content{padding:40px 24px}
+  .footer-top{grid-template-columns:1fr;gap:32px;padding:40px 20px 24px}
+  .footer-bottom{padding:16px 20px;flex-direction:column;gap:8px;text-align:center}
+  .pain-flow{grid-template-columns:1fr 1fr}
+  .card-grid.cols-3,.card-grid.cols-4{grid-template-columns:1fr}
+  .feature-strip{grid-template-columns:1fr}
+  .banner-graphic{display:none}
+  .banner-inner{padding:48px 20px}
+  .hero-stats{grid-template-columns:1fr 1fr}
+  .stat-band-inner{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-top">
+    <a class="nav-logo" href="#" style="display:flex;align-items:center;gap:14px;text-decoration:none">
+      <img src="data:image/png;base64,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" alt="AuditMind" style="height:40px;width:auto;display:block;object-fit:contain">
+      <span class="nav-divider"></span>
+      <span class="nav-sub-brand">삼일PwC 파트너 솔루션</span>
+    </a>
+    <div class="nav-links">
+      <a href="#problem">문제 정의</a>
+      <a href="#solution">솔루션</a>
+      <a href="#learning">학습 구조</a>
+      <a href="#roadmap">로드맵</a>
+      <a class="nav-cta" href="https://auditmind.navingate.com" target="_blank">MVP 데모 보기 →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-bg-img" src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=80&auto=format&fit=crop" alt="Business professional environment">
+  <div class="hero-graphic"></div>
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-eyebrow">AI-Powered Audit Intelligence</div>
+      <h1 class="hero-h1">Better <em>Evidence</em>,<br>PwC-ready Growth.</h1>
+      <p class="hero-desc">
+        고객 제출자료를 업로드 즉시 검증하고,<br>
+        누락·중복·버전·숫자 불일치를 잡아<br>
+        회계사가 바로 판단 가능한 Evidence로 정제합니다.
+      </p>
+      <div class="hero-btn-row">
+        <button class="btn-primary" onclick="window.open('https://auditmind.navingate.com','_blank')">MVP 데모 보기</button>
+        <button class="btn-ghost" onclick="document.getElementById('solution').scrollIntoView({behavior:'smooth'})">솔루션 구조 보기</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="section-inner">
+    <div class="section-label reveal">01 · 문제 정의</div>
+    <h2 class="section-title reveal reveal-delay-1">판단 가능한 <em>Evidence</em>가<br>너무 늦게 도착한다</h2>
+    <p class="section-desc reveal reveal-delay-2">피크 시즌의 병목은 회계사가 판단을 못해서가 아닙니다. 판단 가능한 자료와 근거가 늦게 도착하기 때문입니다.</p>
+
+    <!-- 4단 프로세스 플로우 -->
+    <div class="pain-flow reveal reveal-delay-2">
+      <div class="pain-step">
+        <div class="pain-step-num">STEP 01</div>
+        <div class="pain-step-title">PBC 발송</div>
+        <div class="pain-step-desc">회계사가 요청자료 목록 발송</div>
+      </div>
+      <div class="pain-step highlight">
+        <div class="pain-step-num">STEP 02</div>
+        <div class="pain-step-title">오류 제출</div>
+        <div class="pain-step-desc">누락·구버전·전년도·중복 파일 혼재</div>
+      </div>
+      <div class="pain-step highlight">
+        <div class="pain-step-num">STEP 03</div>
+        <div class="pain-step-title">뒤늦은 발견</div>
+        <div class="pain-step-desc">회계사가 열어봐야 오류를 알 수 있음</div>
+      </div>
+      <div class="pain-step highlight">
+        <div class="pain-step-num">STEP 04</div>
+        <div class="pain-step-title">재요청 반복</div>
+        <div class="pain-step-desc">평균 2~3회 왕복 · 피크 시즌 수십 건 동시</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이미지 카드 그리드 (PwC Insights 스타일) -->
+  <div class="section-inner">
+    <div class="card-grid cols-3 reveal reveal-delay-3">
+      <div class="img-card">
+        <div class="img-card-photo">
+          <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&q=80&auto=format&fit=crop" alt="문서 작업">
+        </div>
+        <div class="img-card-body">
+          <div class="img-card-label">고객 측 문제</div>
+          <div class="img-card-title">고객은 무엇을 줘야 하는지 모른다</div>
+          <div class="img-card-desc">PBC 리스트는 회계법인 언어로 되어 있습니다. "매출채권 명세서"가 뭔지 고객사 현업은 모릅니다.</div>
+        </div>
+      </div>
+      <div class="img-card">
+        <div class="img-card-photo">
+          <img src="https://images.unsplash.com/photo-1543286386-713bdd548da4?w=600&q=80&auto=format&fit=crop" alt="회계사 검토">
+        </div>
+        <div class="img-card-body">
+          <div class="img-card-label">회계사 측 문제</div>
+          <div class="img-card-title">회계사는 열어봐야 오류를 안다</div>
+          <div class="img-card-desc">자료를 받아서 직접 열어보기 전까지 누락·버전 오류·숫자 불일치를 알 방법이 없습니다.</div>
+        </div>
+      </div>
+      <div class="img-card">
+        <div class="img-card-photo">
+          <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80&auto=format&fit=crop" alt="지식 소실">
+        </div>
+        <div class="img-card-body">
+          <div class="img-card-label">구조적 문제</div>
+          <div class="img-card-title">그 판단 경험은 사라진다</div>
+          <div class="img-card-desc">어렵게 찾은 원인과 판단 근거가 다음 고객·다음 연도에 재사용되지 않습니다. 개인의 기억으로만 남아요.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- SOLUTION -->
+<section id="solution" style="background:var(--gray-100)">
+  <!-- 이미지 + 텍스트 스플릿 레이아웃 -->
+  <div class="split-section">
+    <div class="split-row" style="grid-template-columns:2fr 3fr">
+      <div class="split-img with-graphic">
+        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80&auto=format&fit=crop" alt="AI 솔루션">
+      </div>
+      <div class="split-content">
+        <div class="section-label reveal">02 · 솔루션</div>
+        <h2 class="section-title reveal reveal-delay-1">고객 제출 전에<br><em>Evidence</em>로 정제한다</h2>
+        <p class="section-desc reveal reveal-delay-2" style="margin-bottom:28px">AuditMind는 고객이 파일을 올리는 순간 자동 분류하고, 누락·중복·버전·기간·숫자 불일치를 즉시 검증합니다.</p>
+
+        <div class="trans-box reveal reveal-delay-3">
+          <div class="trans-box-label">핵심 차별점 — AI Translation</div>
+          <div class="trans-row">
+            <span class="trans-before">매출채권 명세서</span>
+            <span class="trans-arrow">→</span>
+            <span class="trans-after">"거래처별로 받을 돈 목록 엑셀"</span>
+          </div>
+          <div class="trans-row">
+            <span class="trans-before">부가세 과세표준증명</span>
+            <span class="trans-arrow">→</span>
+            <span class="trans-after">"홈택스에서 다운로드하는 세금 납부 증명서"</span>
+          </div>
+          <div class="trans-row">
+            <span class="trans-before">시산표 (TB)</span>
+            <span class="trans-arrow">→</span>
+            <span class="trans-after">"회계 프로그램에서 출력한 계정별 잔액 요약표"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4단 스텝 카드 -->
+  <div class="section-inner" style="padding-top:56px;padding-bottom:0">
+    <div class="step-grid reveal">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-card-label">자동 생성</div>
+        <div class="step-card-title">고객사 이력 기반 PBC 자동 생성</div>
+        <div class="step-card-desc">업종·규모·과거 오류 패턴을 반영해 맞춤형 요청자료 체크리스트를 생성합니다.</div>
+      </div>
+      <div class="step-card active">
+        <div class="step-num">02</div>
+        <div class="step-card-label">AI Translation</div>
+        <div class="step-card-title">회계법인 언어 → 고객사 언어 자동 변환</div>
+        <div class="step-card-desc">전문 용어를 현업 담당자가 이해할 수 있는 실무 언어로 자동 변환합니다.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-card-label">즉시 검증</div>
+        <div class="step-card-title">업로드 순간 자동 분류·오류 검출</div>
+        <div class="step-card-desc">파일 형식·기간·버전·숫자 일치 여부를 제출 즉시 확인합니다.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">04</div>
+        <div class="step-card-label">경험 축적</div>
+        <div class="step-card-title">판단 결과 학습 → 다음 연도 정확도 향상</div>
+        <div class="step-card-desc">회계사의 검토 판단이 누적되어 고객별 맞춤 지식으로 변환됩니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-inner" style="padding-top:56px">
+    <div class="feature-strip reveal reveal-delay-1">
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <div>
+          <div class="feature-title">스마트 PBC 생성</div>
+          <div class="feature-desc">고객사 업종·규모·이전 감사 이력을 학습해 최적화된 제출 요청 목록을 자동 생성합니다.</div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <div>
+          <div class="feature-title">실시간 오류 감지</div>
+          <div class="feature-desc">업로드 즉시 누락·중복·버전 불일치·숫자 오류를 자동으로 포착하고 고객에게 안내합니다.</div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <div>
+          <div class="feature-title">양방향 커뮤니케이션</div>
+          <div class="feature-desc">재요청 메시지도 고객사 언어로 자동 번역하여 명확한 소통을 지원합니다.</div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div>
+          <div class="feature-title">진행 현황 대시보드</div>
+          <div class="feature-desc">전체 고객사 Evidence 수집 현황을 한 화면에서 실시간으로 모니터링합니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BANNER: 문제에서 솔루션으로 -->
+<div class="banner-section">
+  <div class="banner-bg">
+    <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1400&q=80&auto=format&fit=crop" alt="Professional workspace">
+  </div>
+  <div class="banner-graphic"></div>
+  <div class="banner-inner">
+    <div class="banner-title reveal">판단 경험이<br>자산이 됩니다</div>
+    <p class="banner-desc reveal reveal-delay-1">매 감사시즌 사라지던 회계사의 판단 노하우가 AuditMind에 누적됩니다. 고객사별 Evidence 프로파일이 만들어지고, 다음 연도는 더 빠르고 정확해집니다.</p>
+    <button class="banner-btn reveal reveal-delay-2" onclick="window.open('https://auditmind.navingate.com','_blank')">MVP 데모 체험하기 →</button>
+  </div>
+</div>
+
+<!-- LEARNING -->
+<section id="learning">
+  <div class="section-inner">
+    <div class="section-label reveal">03 · 학습 구조</div>
+    <h2 class="section-title reveal reveal-delay-1">쓸수록 <em>정확해지는</em> 구조</h2>
+    <p class="section-desc reveal reveal-delay-2">단순 자동화가 아닙니다. 감사 경험이 데이터가 되어 고객사별 지식 자산으로 축적됩니다.</p>
+
+    <div class="timeline-grid reveal reveal-delay-2">
+      <div class="timeline-item">
+        <div class="timeline-num">1</div>
+        <div class="timeline-tag">현재 · Pain Point</div>
+        <div class="timeline-title">경험이 개인 기억에만 남는다</div>
+        <div class="timeline-desc">어렵게 찾은 오류 원인과 판단 근거가 담당 회계사 개인의 기억으로만 남습니다.</div>
+        <ul class="timeline-list">
+          <li>연도별 오류 패턴 재발</li>
+          <li>담당자 변경 시 지식 단절</li>
+          <li>동일 실수 반복 요청</li>
+        </ul>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-num">2</div>
+        <div class="timeline-tag">도입 초기 · Foundation</div>
+        <div class="timeline-title">판단 경험이 데이터로 변환된다</div>
+        <div class="timeline-desc">회계사의 검토 결과·수정 요청·승인 판단이 고객사별 Evidence 프로파일로 축적됩니다.</div>
+        <ul class="timeline-list">
+          <li>고객사별 오류 패턴 학습</li>
+          <li>업종별 제출 특성 파악</li>
+          <li>담당자 변경에도 지식 유지</li>
+        </ul>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-num">3</div>
+        <div class="timeline-tag">장기 · Compounding Value</div>
+        <div class="timeline-title">매년 더 정확한 자료가 들어온다</div>
+        <div class="timeline-desc">고객사 현업도 학습됩니다. 반복 사용으로 올바른 자료 제출이 습관이 되어 재요청이 급감합니다.</div>
+        <ul class="timeline-list">
+          <li>재요청 횟수 연도별 감소</li>
+          <li>고객 만족도 향상</li>
+          <li>피크 시즌 회계사 집중력 확보</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 학습 레이어 (이미지+텍스트 스플릿) -->
+    <div class="split-row reveal reveal-delay-3" style="border:1px solid var(--border);margin-top:0">
+      <div class="split-content gray-bg">
+        <div class="section-label" style="margin-bottom:12px">Data Layer</div>
+        <div class="section-title" style="font-size:28px;margin-bottom:12px">3가지 학습 레이어</div>
+        <div class="feature-strip" style="grid-template-columns:1fr;gap:12px;margin-top:4px">
+          <div class="feature-card">
+            <div class="feature-icon">🏢</div>
+            <div>
+              <div class="feature-title">고객사 레이어</div>
+              <div class="feature-desc">고객사별 제출 이력, 오류 패턴, 업종 특성이 개별 프로파일로 축적됩니다.</div>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">👤</div>
+            <div>
+              <div class="feature-title">회계사 레이어</div>
+              <div class="feature-desc">담당 회계사의 판단 기준과 검토 패턴이 학습되어 팀 전체 지식 자산이 됩니다.</div>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔗</div>
+            <div>
+              <div class="feature-title">매핑 레이어</div>
+              <div class="feature-desc">PBC 항목 ↔ 고객사 언어 매핑이 업종·규모별로 세분화되어 번역 정확도가 높아집니다.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="split-img">
+        <img src="https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&q=80&auto=format&fit=crop" alt="데이터 분석">
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ROADMAP / AX SECTION -->
+<section id="roadmap">
+  <div class="section-inner">
+    <div class="section-label reveal">04 · 로드맵</div>
+    <h2 class="section-title reveal reveal-delay-1"><em>AX 연결</em>로<br>확장되는 가치</h2>
+    <p class="section-desc reveal reveal-delay-2">AuditMind는 독립 실행 가능한 Evidence 정제 레이어입니다. PwC의 AX 전략과 연계하여 단계적으로 확장됩니다.</p>
+
+    <div class="roadmap-row reveal reveal-delay-2">
+      <div class="roadmap-card">
+        <div class="roadmap-label">Phase 1 · Now</div>
+        <div class="roadmap-title">Evidence 정제 & 자동 검증</div>
+        <div class="roadmap-desc">고객 제출자료 업로드 즉시 분류·검증. AI Translation으로 재요청 사전 차단. PBC 자동 생성 및 진행 현황 모니터링.</div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-label">Phase 2 · 2026</div>
+        <div class="roadmap-title">Audit AI Feeder Layer</div>
+        <div class="roadmap-desc">정제된 Evidence가 Aura·Harvey·EY Canvas 등 Audit AI 분석 엔진의 입력 데이터로 직접 연결됩니다. 데이터 품질 보증 레이어 역할.</div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-label">Phase 3 · 2027+</div>
+        <div class="roadmap-title">Client Intelligence Platform</div>
+        <div class="roadmap-desc">고객사별 Evidence 프로파일이 감사 전략 수립, 리스크 예측, 고객 관계 관리와 연계되는 종합 Intelligence Platform으로 발전합니다.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<hr class="section-divider">
+
+<!-- DEPLOYMENT OPTIONS -->
+<section id="deployment">
+  <div class="section-inner">
+    <div class="section-label reveal">05 · 도입 방식</div>
+    <h2 class="section-title reveal reveal-delay-1">규모에 맞게 <em>유연하게</em> 도입합니다</h2>
+    <p class="section-desc reveal reveal-delay-2">AuditMind는 중간 레이어 솔루션입니다. 독립 제품으로 즉시 사용할 수도 있고, 기존 전산 인프라와 연동하는 커스터마이징도 가능합니다.</p>
+
+    <div class="card-grid cols-2 reveal reveal-delay-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border)">
+
+      <!-- 옵션 A: 완제품 SaaS -->
+      <div style="background:var(--white);padding:0;overflow:hidden">
+        <div style="background:var(--orange);padding:10px 28px">
+          <span style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--white)">Option A · 중소 회계법인 / 빠른 도입</span>
+        </div>
+        <div style="padding:36px 32px">
+          <div style="font-family:'Noto Serif KR',Georgia,serif;font-size:26px;font-weight:700;color:var(--black);margin-bottom:6px;line-height:1.2">완성된 SaaS 제품으로<br>바로 사용</div>
+          <p style="font-size:14px;color:var(--gray-mid);line-height:1.8;margin-bottom:28px">별도 IT 인프라 구축 없이 즉시 시작할 수 있습니다. 계정 생성 후 당일 운영 가능한 클라우드 기반 완제품입니다.</p>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:32px">
+            <div class="feature-card" style="background:var(--gray-100);border-left:3px solid var(--orange)">
+              <div class="feature-icon" style="background:var(--orange)">🚀</div>
+              <div>
+                <div class="feature-title">즉시 도입 가능</div>
+                <div class="feature-desc">계정 생성 후 당일 운영. IT 팀 없이도 관리자가 직접 설정할 수 있습니다.</div>
+              </div>
+            </div>
+            <div class="feature-card" style="background:var(--gray-100);border-left:3px solid var(--orange)">
+              <div class="feature-icon" style="background:var(--orange)">💼</div>
+              <div>
+                <div class="feature-title">중소 회계법인 최적화</div>
+                <div class="feature-desc">복잡한 구축 없이 고객 포털·PBC 관리·Evidence 검증을 한 번에 제공합니다.</div>
+              </div>
+            </div>
+            <div class="feature-card" style="background:var(--gray-100);border-left:3px solid var(--orange)">
+              <div class="feature-icon" style="background:var(--orange)">📈</div>
+              <div>
+                <div class="feature-title">성장과 함께 확장</div>
+                <div class="feature-desc">고객사·사용자 수에 따라 플랜을 유연하게 조정할 수 있습니다.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 옵션 B: 엔터프라이즈 연동 -->
+      <div style="background:var(--black);padding:0;overflow:hidden">
+        <div style="background:rgba(208,74,2,.85);padding:10px 28px">
+          <span style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--white)">Option B · 대형 법인 / 기존 인프라 연동</span>
+        </div>
+        <div style="padding:36px 32px">
+          <div style="font-family:'Noto Serif KR',Georgia,serif;font-size:26px;font-weight:700;color:var(--white);margin-bottom:6px;line-height:1.2">기존 전산망에<br>연동 · 커스터마이징</div>
+          <p style="font-size:14px;color:rgba(255,255,255,.7);line-height:1.8;margin-bottom:28px">이미 사용 중인 이메일 시스템, SSO 인증, 내부 포털과 AuditMind를 연결합니다. 기존 워크플로우를 유지하면서 Evidence 정제 기능만 추가합니다.</p>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:32px">
+            <div style="display:flex;gap:12px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.06);border-left:3px solid var(--orange)">
+              <div style="width:36px;height:36px;background:var(--orange);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;flex-shrink:0">📧</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:3px">이메일 시스템 연동</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5">기존 이메일 기반 PBC 발송·수신 워크플로우에 자동 검증 레이어를 추가합니다.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.06);border-left:3px solid var(--orange)">
+              <div style="width:36px;height:36px;background:var(--orange);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;flex-shrink:0">🔐</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:3px">SSO 인증 연동</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5">기존 법인 계정 인증 체계(Microsoft 365, Google Workspace 등)와 연결해 별도 계정 관리 없이 사용합니다.</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;padding:16px;background:rgba(255,255,255,.06);border-left:3px solid var(--orange)">
+              <div style="width:36px;height:36px;background:var(--orange);display:flex;align-items:center;justify-content:center;color:white;font-size:14px;flex-shrink:0">🔗</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:3px">내부 시스템 API 연결</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.5">감사 관리 시스템, ERP, 문서 포털 등 기존 전산망과 API로 연동하는 커스터마이징을 지원합니다.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- DATA SECURITY -->
+<section id="security" style="background:var(--gray-100)">
+  <div class="section-inner">
+    <div class="section-label reveal">06 · 데이터 보안</div>
+    <h2 class="section-title reveal reveal-delay-1">고객 자료는 <em>외부로 나가지 않습니다</em></h2>
+    <p class="section-desc reveal reveal-delay-2">감사 자료는 민감한 기업 정보입니다. AuditMind는 고객 데이터가 AI 처리 과정에서 외부로 유출되지 않는 구조를 원칙으로 설계됩니다.</p>
+
+    <!-- 보안 핵심 메시지 배너 -->
+    <div style="background:var(--black);padding:40px 44px;margin-bottom:36px;border-left:4px solid var(--orange);display:flex;gap:32px;align-items:center" class="reveal reveal-delay-2">
+      <div style="font-size:48px;flex-shrink:0">🔒</div>
+      <div>
+        <div style="font-family:'Noto Serif KR',Georgia,serif;font-size:22px;font-weight:700;color:var(--white);margin-bottom:10px;line-height:1.3">"고객의 감사 자료는 AI 처리 중에도<br>외부 서버로 전송되지 않습니다."</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.7">AuditMind의 AI 처리는 데이터가 외부 AI 모델로 전달되어 학습에 사용되거나 유출되는 구조를 허용하지 않습니다. 고객 데이터의 보안과 기밀성은 설계 단계부터 최우선 원칙입니다.</div>
+      </div>
+    </div>
+
+    <div class="feature-strip reveal reveal-delay-3">
+      <div class="feature-card">
+        <div class="feature-icon">🏠</div>
+        <div>
+          <div class="feature-title">데이터 외부 전송 없음</div>
+          <div class="feature-desc">고객이 업로드한 자료는 허가된 처리 범위 내에서만 사용되며, 외부 AI 서비스로 전달되어 학습·저장되지 않습니다.</div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <div>
+          <div class="feature-title">격리된 처리 환경</div>
+          <div class="feature-desc">고객사별 데이터는 완전히 격리된 환경에서 처리됩니다. 다른 고객의 데이터와 혼합되거나 공유되지 않습니다.</div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <div>
+          <div class="feature-title">처리 내역 투명 공개</div>
+          <div class="feature-desc">어떤 자료가 어떤 방식으로 처리되었는지 감사 로그를 통해 투명하게 확인할 수 있습니다.</div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏢</div>
+        <div>
+          <div class="feature-title">온프레미스 구축 가능</div>
+          <div class="feature-desc">보안 요건이 높은 대형 법인의 경우, 법인 내부 인프라에 직접 설치하는 온프레미스 방식으로도 제공합니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 보안 아키텍처 다이어그램 (텍스트 기반) -->
+    <div style="border:1px solid var(--border);margin-top:36px;overflow:hidden" class="reveal reveal-delay-4">
+      <div style="background:var(--orange);padding:12px 24px">
+        <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--white)">데이터 처리 흐름</span>
+      </div>
+      <div style="padding:32px;background:var(--white);display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center">
+        <div style="text-align:center;padding:20px 28px">
+          <div style="width:56px;height:56px;background:var(--gray-100);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 10px">📁</div>
+          <div style="font-size:12px;font-weight:700;color:var(--black)">고객 자료 업로드</div>
+          <div style="font-size:11px;color:var(--gray-light);margin-top:4px">고객사 포털</div>
+        </div>
+        <div style="font-size:22px;color:var(--orange);font-weight:700;padding:0 8px">→</div>
+        <div style="text-align:center;padding:20px 28px">
+          <div style="width:56px;height:56px;background:#FDF2EE;border:2px solid var(--orange);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 10px">🔍</div>
+          <div style="font-size:12px;font-weight:700;color:var(--black)">내부 AI 처리</div>
+          <div style="font-size:11px;color:var(--orange);margin-top:4px">외부 전송 없음</div>
+        </div>
+        <div style="font-size:22px;color:var(--orange);font-weight:700;padding:0 8px">→</div>
+        <div style="text-align:center;padding:20px 28px">
+          <div style="width:56px;height:56px;background:var(--gray-100);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 10px">✅</div>
+          <div style="font-size:12px;font-weight:700;color:var(--black)">검증 결과 반환</div>
+          <div style="font-size:11px;color:var(--gray-light);margin-top:4px">회계사 확인</div>
+        </div>
+        <div style="font-size:22px;color:var(--orange);font-weight:700;padding:0 8px">→</div>
+        <div style="text-align:center;padding:20px 28px">
+          <div style="width:56px;height:56px;background:var(--gray-100);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 10px">🗑️</div>
+          <div style="font-size:12px;font-weight:700;color:var(--black)">보존 기간 후 삭제</div>
+          <div style="font-size:11px;color:var(--gray-light);margin-top:4px">정책에 따라 자동 삭제</div>
+        </div>
+        <div style="width:100%;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);text-align:center">
+          <span style="font-size:12px;color:var(--gray-light)">⚠️ 외부 AI 서비스(ChatGPT, Claude 등)로의 데이터 전송 없음 · 제3자 학습 사용 없음 · 고객사 간 데이터 공유 없음</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA BANNER -->
+<div class="banner-section" id="pwc">
+  <div class="banner-bg">
+    <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1400&q=80&auto=format&fit=crop" alt="Business building">
+  </div>
+  <div class="banner-graphic"></div>
+  <div class="banner-inner">
+    <div class="banner-title reveal">지금 바로<br>MVP를 체험하세요</div>
+    <p class="banner-desc reveal reveal-delay-1">AuditMind MVP는 현재 실제 사용 가능한 상태입니다. 직접 파일을 업로드하고 AI Translation과 자동 검증을 경험해 보세요.</p>
+    <button class="banner-btn reveal reveal-delay-2" onclick="window.open('https://auditmind.navingate.com','_blank')">MVP 데모 보기 →</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="footer-logo" style="margin-bottom:16px">
+        <img src="data:image/png;base64,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" alt="AuditMind"
+          style="height:36px;width:auto;display:block;object-fit:contain;
+                 filter:brightness(0) invert(1);opacity:.92">
+      </div>
+      <p class="footer-tagline">Better Evidence, PwC-ready Growth.<br>고객 제출자료를 AI-ready Evidence로 정제하는<br>삼일PwC 파트너 솔루션입니다.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">솔루션</div>
+      <ul class="footer-links">
+        <li><a href="#problem">문제 정의</a></li>
+        <li><a href="#solution">솔루션 구조</a></li>
+        <li><a href="#learning">학습 구조</a></li>
+        <li><a href="#roadmap">로드맵</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">바로가기</div>
+      <ul class="footer-links">
+        <li><a href="https://auditmind.navingate.com" target="_blank">MVP 데모</a></li>
+        <li><a href="#pwc">PwC 연계 전략</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2026 AuditMind · Better Evidence, PwC-ready Growth</div>
+    <div class="footer-copy">삼일PwC 파트너 솔루션</div>
+  </div>
+</footer>
+
+<script>
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+});
+
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

@@ -6,10 +6,10 @@ export const accountantConsoleContent = {
     userName: "데모 계정",
   },
   nav: [
-    { label: "대시보드", href: "/", active: true, count: "" },
-    { label: "고객사 관리", href: "/?page=customers", active: false, count: "" },
-    { label: "제출자료 검토", href: "/?page=review", active: false, count: "" },
-    { label: "서비스 관리", href: "/?page=templates", active: false, count: "" },
+    { label: "대시보드", href: "/console", active: true, count: "" },
+    { label: "고객사 관리", href: "/console?page=customers", active: false, count: "" },
+    { label: "제출자료 검토", href: "/console?page=review", active: false, count: "" },
+    { label: "서비스 관리", href: "/console?page=templates", active: false, count: "" },
   ],
   summary: [
     {
