@@ -37,9 +37,9 @@ The current migration enables `pgcrypto` and `pg_trgm`. Do not require `pgvector
 - `seeds/002_document_required_fields_seed.sql`: minimum sufficient required-field anchors for PaddleOCR/Qwen document judgment.
 - `seeds/003_request_template_seed.sql`: Korean accounting-firm work-package template master seed.
 - `seeds/004_request_template_document_seed.sql`: default template-document mappings for request creation presets.
-- `seeds/005_customer_seed.sql`: first customer/contact sample seed for the accountant customer management screen.
-- `seeds/006_accountant_review_seed.sql`: first persisted review work-item seed for the accountant submission-review screen.
-- `seeds/007_customer_portal_demo_seed.sql`: demo customer portal request, stable demo token, requested checklist rows, and sample uploaded-file rows.
+- `seeds/005_customer_seed.sql`: customer/contact runtime seed placeholder. It must not recreate demo customers.
+- `seeds/006_accountant_review_seed.sql`: accountant review runtime seed placeholder. It must not recreate demo work items.
+- `seeds/007_customer_portal_demo_seed.sql`: MVP-only stable `mvp-demo` customer portal link attached to an existing customer. It must not create customer master data.
 - `seeds/008_app_runtime_seed.sql`: shell brand settings, AI endpoint records, dashboard due-alert setting, and notification seed rows.
 - `apply_local.sh`: applies the migration and seed files to the local Docker database in order.
 

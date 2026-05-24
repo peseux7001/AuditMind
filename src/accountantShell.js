@@ -58,6 +58,7 @@ const shellContent = {
     { label: "자료제출 요청", href: "/?page=submission-requests", page: "submission-requests", count: "" },
     { label: "제출자료 검토", href: "/?page=review", page: "review", count: "" },
     { label: "서비스 관리", href: "/?page=templates", page: "templates", count: "" },
+    { label: "자료 제출 포털 미리보기", href: "/submit/mvp-demo", page: "customer-test", count: "" },
   ],
   notifications: [],
 };
@@ -66,9 +67,9 @@ let timestampTimer;
 
 const getLatestSubmissionPortalUrl = () => {
   try {
-    return window.localStorage.getItem("auditmind.latestSubmissionPortalUrl") || "#";
+    return window.localStorage.getItem("auditmind.latestSubmissionPortalUrl") || "/submit/mvp-demo";
   } catch {
-    return "#";
+    return "/submit/mvp-demo";
   }
 };
 
