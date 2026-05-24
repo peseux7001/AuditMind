@@ -1,0 +1,3 @@
+python-calamine==0.4.0
+pyhwp==0.1b15
+six==1.17.0

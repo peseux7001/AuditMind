@@ -4,5 +4,11 @@ test-results/
 playwright-report/
 .npm-cache/
 .pycache/
+.venv_fileproc/
+.venv-paddleocr/
+.paddlex-cache/
+.env
+tmp/
+public/uploads/
 *.log
 .DS_Store

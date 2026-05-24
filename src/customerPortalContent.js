@@ -21,8 +21,11 @@ export const customerPortalContent = {
   },
   bulkUpload: {
     title: "자료 업로드",
-    description:
-      "실행 파일, 암호가 걸린 압축 파일, 손상된 파일은 처리할 수 없습니다.",
+    description: "",
+    guidance: [
+      "자료의 품질이 낮거나 누락 사항이 많은 경우 오류로 표시되거나 다시 제출요청을 받으실 수 있습니다.",
+      "고객님의 개인 정보는 외부로 유출되지 않고 AuditMind 내부에서만 사용됩니다.",
+    ],
     supportedLabel: "지원파일",
     supportedFiles: [
       "PDF",
@@ -44,10 +47,9 @@ export const customerPortalContent = {
       "TIFF",
       "TIF",
       "ZIP",
-      "7Z",
     ],
     formats: [],
-    button: "파일 선택",
+    button: "파일 다중 선택",
     overlayTitle: "파일 업로드 중",
     overlayDescriptionLines: [
       "선택한 파일을 안전하게 접수하고 있습니다.",
@@ -59,12 +61,32 @@ export const customerPortalContent = {
       "문서 분류와 분석은 이 페이지를 나가셔도 계속 진행됩니다.",
     ],
     overlayConfirm: "확인",
+    overlayRetry: "다시 시도",
+    overlayClose: "닫기",
+    overlayFailureTitle: "파일 업로드 실패",
+    overlayFailureDescriptionLines: [
+      "파일 업로드에 실패했습니다.",
+      "인터넷 연결을 확인한 뒤 다시 시도해 주세요.",
+    ],
+  },
+  customerRequest: {
+    title: "요청사항",
+    helper: "제출 버튼을 누르셔야 요청사항이 접수됩니다.",
+    placeholder: "",
+    defaultValue: "",
+    saveAction: "저장",
+    editAction: "수정",
+    submitAction: "제출",
+    submittedAction: "제출",
   },
   checklist: {
     title: "자료 제출",
     description: "최종 접수 버튼을 누르기 전까지는 자료가 전달되지 않습니다. 반드시 최종 접수 버튼을 눌러주세요.",
     filters: ["전체", "미접수"],
     finalSubmitAction: "최종 접수",
+    finalSubmitConfirmTitle: "이 자료를 최종 접수할까요?",
+    finalSubmitConfirmDescription: "최종 접수하면 더 이상 수정할 수 없습니다.",
+    finalSubmitCancel: "취소",
     items: [
       {
         status: "검수완료",
@@ -80,12 +102,13 @@ export const customerPortalContent = {
         action: "파일 업로드",
       },
       {
-        status: "반려",
+        status: "오류",
         statusTone: "danger",
         highlight: true,
         title: "카드매출 내역",
         description: "카드사 또는 POS에서 받은 월별 카드매출 자료입니다.",
-        reviewMessage: "반려 사유: 3월 자료가 빠진 것으로 보입니다. 1월, 2월 파일만 자동 매칭되었습니다.",
+        reviewMessage: "오류 사유: 3월 자료가 빠진 것으로 보입니다. 1월, 2월 파일만 자동 매칭되었습니다.",
+        accountantComment: "3월 카드매출 내역도 추가로 업로드해 주세요. 카드사 관리자 페이지에서 월별 매출자료로 내려받으시면 됩니다.",
         note: "",
         action: "파일 업로드",
         primaryAction: true,
@@ -95,7 +118,7 @@ export const customerPortalContent = {
         statusTone: "processing",
         title: "매출 세금계산서 합계표",
         description: "거래처별 매출 세금계산서를 합산한 자료입니다.",
-        reviewMessage: "AI가 문서를 분석 중입니다. 잠시 후 검수 완료율과 결과가 표시됩니다.",
+        reviewMessage: "AI가 문서를 분석 중입니다.",
         note: "",
         action: "파일 업로드",
       },
@@ -115,6 +138,7 @@ export const customerPortalContent = {
         title: "PG 정산자료",
         description: "토스페이먼츠, 나이스페이, 카카오페이 등 결제대행사 정산 내역입니다.",
         reviewMessage: "AI 검수 완료율 100%입니다. 제출 기준에 맞게 첨부되었습니다.",
+        accountantComment: "확인되었습니다. 추가 제출은 필요하지 않습니다.",
         note: "PG_정산자료_2025_1기.zip · 어제 18:12 제출",
         attachment: {
           name: "PG_정산자료_2025_1기.zip",
@@ -142,17 +166,30 @@ export const customerPortalContent = {
     qwenModel: "Qwen3.6-35B-A3B-NVFP4",
     qwenReasoning: false,
     validation: "rejectJapaneseOrChineseCharacters",
-    preparingText: "메시지를 준비하고 있습니다.",
+    preparingText: "AI가 검토 중입니다.",
     generatedMessage:
       "샘플테크 주식회사 담당자님, 현재 **자료 제출률은 58%**이며 **접수 마감일은 2026년 5월 27일**입니다. 아직 미접수된 자료가 있어 확인이 필요하지만, 지금처럼 차근차근 올려주시면 더 빠르고 정확한 검토가 가능합니다. 바쁜 일정 속에서도 여기까지 준비해 주신 것만으로도 충분히 잘 진행되고 있습니다. 남은 자료도 편하실 때 이어서 제출해 주세요.",
   },
-  sidebar: {
-    nextTitle: "참고 사항",
-    firmName: "AuditMind",
-    nextSteps: [
-      "최종 접수하기 전까지 언제든지 자료를 다시 업로드하실 수 있습니다.",
-      "자료의 품질이 낮거나 누락 사항이 많은 경우 제출이 반려되거나 다시 제출요청을 받으실 수 있습니다.",
-      "고객님의 개인 정보는 외부로 유출되지 않고 ##### 내부에서만 사용됩니다.",
-    ],
+  legalFooter: {
+    companyName: "AuditMind 주식회사",
+    representative: "홍길동",
+    businessRegistrationNumber: "000-00-00000",
+    mailOrderRegistrationNumber: "제2026-서울강남-00000호",
+    address: "서울특별시 강남구 테헤란로 000, 00층",
+    phone: "02-0000-0000",
+    email: "populationinversion@gmail.com",
+    privacyOfficer: "개인정보 보호책임자 privacy@auditmind.co.kr",
+    links: ["개인정보처리방침", "이용약관", "보안 및 자료보호 안내", "사업자정보 확인"],
+    copyright: "© 2026 AuditMind. All rights reserved.",
+  },
+  access: {
+    expired: {
+      title: "이 링크는 더 이상 사용할 수 없습니다.",
+      description: "담당자에게 새 링크를 요청해 주세요.",
+    },
+    invalid: {
+      title: "접근할 수 없는 제출 페이지입니다.",
+      description: "링크가 올바른지 확인해 주세요.",
+    },
   },
 };

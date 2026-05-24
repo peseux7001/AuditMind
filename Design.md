@@ -8,6 +8,7 @@ Source reference:
 - Introduction page: `6150:141`
 - Colors page: `6150:151`
 - Library: `Microsoft Teams UI Kit (Community)`
+- Secondary component reference: `Whitepace - SaaS Landing Page (Community)`
 
 ## Design Principles
 
@@ -45,6 +46,8 @@ Use a Teams-style application shell as the default mental model.
 - **Spacing**: Use consistent spacing steps based on `4px` increments. Prefer `8`, `12`, `16`, `24`, `32`, and `48`.
 - **Cards**: Use cards only for repeated records, summary tiles, or contained forms. Do not place cards inside cards.
 - **Radius**: Keep radii restrained. Default container radius should be `8px` or less unless matching a specific Fluent/Teams control.
+- **Customer submission portal shell**: For customer-facing one-link submission pages, use a full-width branded header and a full-width footer. Keep the main task canvas centered and constrained so the checklist reads as a focused workflow.
+- **Legal footer**: Customer-facing pages need a full-width legal/business footer. It should contain provider identity, business registration details, contact information, privacy officer information, and links to required policies. Do not use the footer for workflow tips that belong near the relevant action.
 
 ## Color
 
@@ -62,6 +65,16 @@ Core reference colors observed from the Teams UI Kit:
 | `surface.base` | `#FFFFFF` | Main surface |
 | `surface.subtle` | `#E0E0E0` | Pills, subtle badges, separators, inactive fills |
 
+Customer portal reference colors adapted from the Whitepace component direction:
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `portal.brand.deep` | `#043873` | Full-width customer portal header and footer |
+| `portal.action.primary` | `#4F9CF9` | Primary file action, active progress, small footer markers |
+| `portal.surface.soft` | `#F5FAFF` | Upload surface and light work panels |
+| `portal.border.soft` | `#DBE8F6` | Soft blue panel borders |
+| `portal.warning` | `#F2C94C` | Deadline progress accent |
+
 Usage rules:
 
 - Use neutral backgrounds for most product surfaces.
@@ -69,6 +82,8 @@ Usage rules:
 - Do not build one-note purple pages. Most UI should remain neutral with precise accent use.
 - Use green for success/available states, red for destructive or failed states, yellow/orange for warnings, and always pair color with text or iconography.
 - Support light and dark themes conceptually, even if the first implementation ships light-only.
+- The customer submission portal may use `portal.brand.deep` for the full-width header and footer so the page feels intentional rather than like stacked generic cards.
+- Do not apply Whitepace-style blue as a marketing hero treatment. Use it only for component surfaces, primary controls, progress indicators, and shell framing.
 
 ## Typography
 
@@ -114,6 +129,12 @@ Prefer Fluent/Teams-inspired controls and states.
 - **Dialogs and drawers**: Use for focused edits or review. Avoid full-screen interruption unless the workflow is complex.
 - **Notifications**: Use Teams-style concise notification patterns for assignment, review, approval, and evidence updates.
 - **Avatars/presence**: Use for owners, reviewers, and collaborators where accountability matters.
+- **Customer portal header/footer**: Header and footer should use the same deep brand background. Header contains the product identity and customer/company context. Footer contains legal/business identity, privacy, terms, security, and support links.
+- **Submission rows**: Use compact list rows with visible status pills, clear review text, and action buttons. Avoid decorative cards for every row.
+- **Upload panel**: Treat upload as a focused action panel, not a dashed marketing drop zone. The panel may use a soft blue surface and a primary action button.
+- **Accountant work cards**: Accountant pages should use paired work cards with matching header heights, soft `#fafafa` header surfaces, restrained borders, compact table scale, and stable row heights. Do not add collapsible panels unless there is a clear workflow need.
+- **Accountant tables**: Customer lists, contact lists, submission-request lists, and requested-document lists should share row padding, header treatment, font size, selected state, and fixed pill-space behavior so rows do not jump when a state pill appears.
+- **Accountant primary actions**: Creation and commit actions such as `신규 고객사 추가`, `담당자 추가`, `자료 추가`, `발송`, and `저장` use the same primary blue button treatment. Destructive actions stay secondary/red and require confirmation.
 
 All interactive components need these states:
 
@@ -151,6 +172,7 @@ Accessibility is a product requirement, not polish.
 
 When implementing AuditMind screens:
 
+- Keep each product page or major screen in its own page module. Do not mix customer-facing and accountant-facing screen implementations in the same file.
 - Start from the real workflow, not a landing page.
 - Use existing design tokens before adding new colors or sizes.
 - Build dense, scan-friendly interfaces for repeated use.
@@ -158,6 +180,7 @@ When implementing AuditMind screens:
 - Avoid decorative gradients, oversized heroes, nested cards, and purely atmospheric imagery.
 - Validate responsive behavior at desktop and mobile widths.
 - Keep UI state explicit: loading, empty, error, filtered, selected, unsaved, and submitted.
+- Whitepace references are allowed only as component-level inspiration: shell color, button tone, soft panel surfaces, footer treatment, and spacing rhythm. Do not copy its landing-page sections, hero structure, testimonial blocks, or marketing copy patterns.
 
 ## Figma Reference Workflow
 

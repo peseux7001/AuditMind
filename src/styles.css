@@ -35,7 +35,7 @@
   body {
     min-height: 100%;
     margin: 0;
-    background: #f5f5f5;
+    background: #f4f7fb;
     color: #242424;
   }
 
@@ -72,5 +72,66 @@
   [contenteditable="true"]:focus {
     background: rgb(247 247 255);
     outline: 2px solid rgb(98 100 167 / 70%);
+  }
+}
+
+@layer components {
+  .auditmind-flowing-dash {
+    stroke-width: 1.8;
+    stroke-dasharray: 7 9;
+    stroke-linecap: round;
+    fill: none;
+    filter: drop-shadow(0 1px 1px rgb(255 255 255 / 75%));
+    animation: auditmind-dash-flow 0.9s linear infinite;
+  }
+
+  .auditmind-processing-spinner {
+    display: block;
+    overflow: visible;
+    transform-origin: 50% 50%;
+    will-change: transform;
+    animation: auditmind-spinner-rotate 0.72s linear infinite;
+  }
+
+  .auditmind-processing-spinner-track,
+  .auditmind-processing-spinner-arc {
+    fill: none;
+    stroke-width: 2.4;
+  }
+
+  .auditmind-processing-spinner-track {
+    stroke: #d6d6d6;
+  }
+
+  .auditmind-processing-spinner-arc {
+    stroke: #6264a7;
+    stroke-linecap: round;
+    stroke-dasharray: 18 36;
+  }
+}
+
+@keyframes auditmind-dash-flow {
+  from {
+    stroke-dashoffset: 34;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes auditmind-spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auditmind-processing-spinner {
+    animation-duration: 1.6s;
   }
 }

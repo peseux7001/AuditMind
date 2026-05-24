@@ -9,9 +9,16 @@
     "preview": "vite preview --host 127.0.0.1 --port 4173",
     "serve": "npm run dev",
     "test": "playwright test",
+    "test:files": "sh backend/tests/run_file_tests.sh",
     "test:headed": "playwright test --headed",
     "pw:open": "playwright open http://localhost:4173/",
-    "pw:report": "playwright show-report"
+    "pw:report": "playwright show-report",
+    "deploy:fedora": "sh scripts/deploy_fedora.sh",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f db",
+    "db:apply": "sh database/apply_local.sh",
+    "db:shell": "docker compose exec db psql -U auditmind -d auditmind"
   },
   "keywords": [],
   "author": "",
@@ -23,5 +30,8 @@
     "playwright": "^1.60.0",
     "tailwindcss": "^4.3.0",
     "vite": "^8.0.13"
+  },
+  "dependencies": {
+    "pg": "^8.21.0"
   }
 }
