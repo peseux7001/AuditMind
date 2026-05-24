@@ -38,35 +38,3 @@ ON CONFLICT (key) DO UPDATE SET
   description = EXCLUDED.description,
   updated_at = now(),
   updated_by_user_id = EXCLUDED.updated_by_user_id;
-
-INSERT INTO accountant_notifications (
-  type,
-  title,
-  detail,
-  kind,
-  source_entity_type,
-  source_entity_id,
-  received_at
-)
-SELECT
-  '자료 접수',
-  c.name,
-  csi.requested_name,
-  'review-ready',
-  'customer_submission_item',
-  csi.id,
-  COALESCE(uf.uploaded_at, csi.updated_at, now())
-FROM customer_submission_items csi
-JOIN customer_submission_requests csr ON csr.id = csi.request_id
-JOIN customers c
-  ON c.id = csr.customer_id
-  OR (csr.customer_id IS NULL AND c.name = csr.customer_name)
-LEFT JOIN LATERAL (
-  SELECT uploaded_at
-  FROM uploaded_files uf
-  WHERE uf.submission_item_id = csi.id
-  ORDER BY uploaded_at DESC
-  LIMIT 1
-) uf ON true
-WHERE csi.status IN ('approved', 'submitted')
-ON CONFLICT DO NOTHING;

@@ -7,7 +7,7 @@ const searchParams = new URLSearchParams(window.location.search);
 const editMode = import.meta.env.DEV && searchParams.get("edit") === "1";
 const mockMode = import.meta.env.DEV && searchParams.get("mock") === "1";
 const accessState = searchParams.get("access");
-const portalToken = decodeURIComponent(window.location.pathname.split("/").filter(Boolean)[1] || "demo-token");
+const portalToken = decodeURIComponent(window.location.pathname.split("/").filter(Boolean)[1] || "");
 const portalEndpoint = `/api/submission-portal/${encodeURIComponent(portalToken)}`;
 
 const toneClasses = {

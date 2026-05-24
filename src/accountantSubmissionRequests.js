@@ -3,71 +3,6 @@ import documentTypeSeedSql from "../database/seeds/001_document_type_seed.sql?ra
 import requestTemplateSeedSql from "../database/seeds/003_request_template_seed.sql?raw";
 import requestTemplateDocumentSeedSql from "../database/seeds/004_request_template_document_seed.sql?raw";
 
-const fallbackRequestCustomers = [
-  {
-    id: "sample-tech",
-    company: "샘플테크 주식회사",
-    primaryContact: "최지훈",
-    contactTitle: "CFO",
-    contactPhone: "010-4567-8901",
-    contactEmail: "finance@sampletech.kr",
-    contacts: [
-      {
-        id: "sample-tech-contact-1",
-        name: "최지훈",
-        title: "CFO",
-        phone: "010-4567-8901",
-        email: "finance@sampletech.kr",
-        primary: true,
-      },
-      {
-        id: "sample-tech-contact-2",
-        name: "한서윤",
-        title: "회계팀장",
-        phone: "010-2222-3333",
-        email: "tax@sampletech.kr",
-        primary: false,
-      },
-    ],
-  },
-  {
-    id: "lumen-commerce",
-    company: "루멘커머스",
-    primaryContact: "이서연",
-    contactTitle: "재무팀장",
-    contactPhone: "010-3344-7812",
-    contactEmail: "tax@lumencommerce.kr",
-    contacts: [
-      {
-        id: "lumen-commerce-contact-1",
-        name: "이서연",
-        title: "재무팀장",
-        phone: "010-3344-7812",
-        email: "tax@lumencommerce.kr",
-        primary: true,
-      },
-    ],
-  },
-  {
-    id: "orbit-health",
-    company: "오르빗헬스",
-    primaryContact: "정다은",
-    contactTitle: "운영매니저",
-    contactPhone: "010-8877-1204",
-    contactEmail: "ops@orbithealth.kr",
-    contacts: [
-      {
-        id: "orbit-health-contact-1",
-        name: "정다은",
-        title: "운영매니저",
-        phone: "010-8877-1204",
-        email: "ops@orbithealth.kr",
-        primary: true,
-      },
-    ],
-  },
-];
-
 const parseSeedRows = (sql, withDescription = false) =>
   [...sql.matchAll(/\('([^']+)', '([^']+)', '([^']+)'(?:, '([^']+)')?, (\d+)\)/g)].map((match) =>
     withDescription
@@ -212,22 +147,13 @@ const loadSubmissionRequestWorkspace = async () => {
     requestJson("/api/request-templates"),
   ]);
 
-  const apiCustomers = normalizeRequestCustomers(customerPayload.customers || []);
-  if (apiCustomers.length) {
-    return {
-      customers: apiCustomers,
-      templates: templatePayload.templates || requestTemplateRows,
-      documents: (templatePayload.documents || documentTypeRows).map((document) => ({
-        ...document,
-        categoryName: document.categoryName || "",
-      })),
-    };
-  }
-
   return {
-    customers: fallbackRequestCustomers,
-    templates: requestTemplateRows,
-    documents: documentTypeRows,
+    customers: normalizeRequestCustomers(customerPayload.customers || []),
+    templates: templatePayload.templates || requestTemplateRows,
+    documents: (templatePayload.documents || documentTypeRows).map((document) => ({
+      ...document,
+      categoryName: document.categoryName || "",
+    })),
   };
 };
 
@@ -1102,20 +1028,20 @@ export const renderAccountantSubmissionRequests = (app) => {
     activePage: "submission-requests",
     eyebrow: "",
     title: "자료제출 요청",
-    bodyHtml: renderSubmissionRequestsBody(fallbackRequestCustomers, new Set([fallbackRequestCustomers[0]?.id].filter(Boolean))),
+    bodyHtml: renderSubmissionRequestsBody([], new Set()),
     onReady: (shellRoot) => {
-      const attach = (customers) => attachSubmissionRequestInteractions(shellRoot, customers.length ? customers : fallbackRequestCustomers);
+      const attach = (customers) => attachSubmissionRequestInteractions(shellRoot, customers);
       loadSubmissionRequestWorkspace()
         .then((workspace) => {
           applyRequestTemplateWorkspace(workspace);
           const main = shellRoot.querySelector("main");
-          const customers = workspace.customers.length ? workspace.customers : fallbackRequestCustomers;
+          const customers = workspace.customers;
           if (main) {
             main.innerHTML = renderSubmissionRequestsBody(customers, new Set([customers[0]?.id].filter(Boolean)));
           }
           attach(customers);
         })
-        .catch(() => attach(fallbackRequestCustomers));
+        .catch(() => attach([]));
     },
   });
 };

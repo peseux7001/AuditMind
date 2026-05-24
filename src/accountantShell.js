@@ -58,43 +58,17 @@ const shellContent = {
     { label: "자료제출 요청", href: "/?page=submission-requests", page: "submission-requests", count: "" },
     { label: "제출자료 검토", href: "/?page=review", page: "review", count: "" },
     { label: "서비스 관리", href: "/?page=templates", page: "templates", count: "" },
-    { label: "자료 제출 페이지 (고객용 데모)", href: "/submit/demo-token", page: "customer-test", count: "" },
   ],
-  notifications: [
-    {
-      type: "자료 접수",
-      title: "샘플테크 주식회사",
-      detail: "통장 입금 내역",
-      receivedAt: Date.now() - 35 * 1000,
-    },
-    {
-      type: "자료 접수",
-      title: "브릿지AI",
-      detail: "PG 정산자료",
-      receivedAt: Date.now() - 3 * 60 * 1000,
-    },
-    {
-      type: "자료 접수",
-      title: "오르빗헬스",
-      detail: "부가세 신고서",
-      receivedAt: Date.now() - 7 * 60 * 1000,
-    },
-    {
-      type: "자료 접수",
-      title: "루멘커머스",
-      detail: "주요 매출계약서",
-      receivedAt: Date.now() - 11 * 60 * 1000,
-    },
-  ],
+  notifications: [],
 };
 
 let timestampTimer;
 
 const getLatestSubmissionPortalUrl = () => {
   try {
-    return window.localStorage.getItem("auditmind.latestSubmissionPortalUrl") || "/submit/demo-token";
+    return window.localStorage.getItem("auditmind.latestSubmissionPortalUrl") || "#";
   } catch {
-    return "/submit/demo-token";
+    return "#";
   }
 };
 

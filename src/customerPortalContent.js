@@ -5,7 +5,7 @@ export const customerPortalContent = {
     symbolText: "AM",
     symbolImage: "",
     symbolAlt: "AuditMind",
-    badges: ["샘플테크 주식회사"],
+    badges: [],
   },
   request: {
     meta: "",
@@ -168,7 +168,7 @@ export const customerPortalContent = {
     validation: "rejectJapaneseOrChineseCharacters",
     preparingText: "AI가 검토 중입니다.",
     generatedMessage:
-      "샘플테크 주식회사 담당자님, 현재 **자료 제출률은 58%**이며 **접수 마감일은 2026년 5월 27일**입니다. 아직 미접수된 자료가 있어 확인이 필요하지만, 지금처럼 차근차근 올려주시면 더 빠르고 정확한 검토가 가능합니다. 바쁜 일정 속에서도 여기까지 준비해 주신 것만으로도 충분히 잘 진행되고 있습니다. 남은 자료도 편하실 때 이어서 제출해 주세요.",
+      "현재 **자료 제출률**과 **접수 마감일**을 기준으로 남은 자료를 안내합니다. 필요한 자료를 차근차근 업로드해 주세요.",
   },
   legalFooter: {
     companyName: "AuditMind 주식회사",

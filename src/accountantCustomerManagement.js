@@ -504,7 +504,7 @@ const renderAddCustomerDialog = ({ isOpen }) => {
         <div class="mt-5 grid gap-3 md:grid-cols-2">
           <label>
             <span class="${fieldLabelClass}">고객사명 <span class="text-[#a4262c]" aria-hidden="true">*</span></span>
-            <input class="${inputClass} mt-1" type="text" data-new-customer-field="company" aria-required="true" placeholder="예: 샘플테크 주식회사">
+            <input class="${inputClass} mt-1" type="text" data-new-customer-field="company" aria-required="true" placeholder="예: 고객사명">
           </label>
           <label>
             <span class="${fieldLabelClass}">사업자등록번호</span>
