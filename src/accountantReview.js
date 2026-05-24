@@ -643,10 +643,20 @@ const attachReviewInteractions = (app) => {
         if (!item) return;
         if (button.dataset.reviewAction === "rejected") {
           const removedId = item.id;
+          const currentCustomerComment =
+            app.querySelector('[data-review-note="customerComment"]')?.value ?? item.customerComment ?? "";
+          const currentInternalMemo =
+            app.querySelector('[data-review-note="internalMemo"]')?.value ?? item.internalMemo ?? "";
+          item.customerComment = currentCustomerComment;
+          item.internalMemo = currentInternalMemo;
           const remainingItems = getReviewableItems(items.filter((candidate) => candidate.id !== removedId));
           items = remainingItems;
           selectedId = remainingItems[0]?.id || "";
-          updateReviewItemFromApi(item.id, { status: "rejected" }).catch(() => {});
+          updateReviewItemFromApi(item.id, {
+            status: "rejected",
+            internalMemo: currentInternalMemo,
+            customerComment: currentCustomerComment,
+          }).catch(() => {});
         }
         rerenderWorkspace();
       });
