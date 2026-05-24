@@ -2419,6 +2419,65 @@ const createContact = async (customerId, payload) => {
   return mapContactRow(rows[0]);
 };
 
+const deleteContacts = async (customerId, payload) => {
+  const contactIds = [...new Set((payload.contactIds || []).map((id) => String(id || "").trim()).filter(Boolean))];
+  if (!contactIds.length) {
+    const error = new Error("삭제할 담당자를 선택해 주세요.");
+    error.status = 400;
+    throw error;
+  }
+
+  const { rows: deletedRows } = await pool.query(
+    `
+      DELETE FROM customer_contacts
+      WHERE customer_id = $1
+        AND id = ANY($2::uuid[])
+      RETURNING id
+    `,
+    [customerId, contactIds],
+  );
+
+  if (deletedRows.length !== contactIds.length) {
+    const error = new Error("삭제할 담당자를 찾을 수 없습니다.");
+    error.status = 404;
+    throw error;
+  }
+
+  const { rows: primaryRows } = await pool.query(
+    "SELECT COUNT(*)::int AS count FROM customer_contacts WHERE customer_id = $1 AND is_primary = true",
+    [customerId],
+  );
+
+  if (!primaryRows[0]?.count) {
+    await pool.query(
+      `
+        UPDATE customer_contacts
+        SET is_primary = true, updated_at = now(), updated_by_user_id = $2
+        WHERE id = (
+          SELECT id
+          FROM customer_contacts
+          WHERE customer_id = $1
+          ORDER BY created_at ASC, name ASC
+          LIMIT 1
+        )
+      `,
+      [customerId, currentUserId],
+    );
+  }
+
+  const { rows } = await pool.query(
+    `
+      SELECT id, name, title, phone, email, is_primary
+      FROM customer_contacts
+      WHERE customer_id = $1
+      ORDER BY is_primary DESC, name ASC
+    `,
+    [customerId],
+  );
+
+  return rows.map(mapContactRow);
+};
+
 const saveCustomerAiAnalysis = async (customerId, payload) => {
   const analysisText = String(payload.analysisText || "").trim();
   if (!analysisText) {
@@ -2602,6 +2661,12 @@ const routeRequest = async (req, res) => {
   if (contactMatch && req.method === "POST") {
     const payload = await readJsonBody(req);
     sendJson(res, 201, { contact: await createContact(contactMatch[1], payload) });
+    return;
+  }
+
+  if (contactMatch && req.method === "DELETE") {
+    const payload = await readJsonBody(req);
+    sendJson(res, 200, { contacts: await deleteContacts(contactMatch[1], payload) });
     return;
   }
 

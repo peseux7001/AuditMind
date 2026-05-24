@@ -299,6 +299,14 @@ const createContactFromApi = async (customerId, values) => {
   return payload.contact;
 };
 
+const deleteContactsFromApi = async (customerId, contactIds) => {
+  const payload = await requestJson(`${customersEndpoint}/${encodeURIComponent(customerId)}/contacts`, {
+    method: "DELETE",
+    body: JSON.stringify({ contactIds }),
+  });
+  return Array.isArray(payload.contacts) ? payload.contacts : [];
+};
+
 const saveCustomerAiAnalysisToApi = async (customer, analysisText) =>
   requestJson(`${customersEndpoint}/${encodeURIComponent(customer.id)}/ai-analysis`, {
     method: "PUT",
@@ -358,12 +366,15 @@ const renderCustomerRows = (customers, selectedId) =>
     })
     .join("");
 
-const renderContactRows = (contacts) =>
+const renderContactRows = (contacts, selectedContactIds = new Set()) =>
   contacts.length
     ? contacts
         .map(
           (contact) => `
             <tr class="bg-white hover:bg-[#f7fbff]">
+              <td class="px-2 py-3 align-middle text-center">
+                <input class="h-4 w-4 rounded border-[#8a8886] accent-[#4f9cf9]" type="checkbox" data-select-contact="${escapeHtml(contact.id)}" aria-label="${escapeHtml(contact.name || "담당자")} 선택" ${selectedContactIds.has(contact.id) ? "checked" : ""}>
+              </td>
               <td class="px-2 py-3 align-middle">
                 <div class="flex min-w-0 items-center gap-1.5">
                   <span class="min-w-0 truncate font-semibold text-[#2a2a2a]">${escapeHtml(contact.name || "미입력")}</span>
@@ -381,9 +392,9 @@ const renderContactRows = (contacts) =>
           `,
         )
         .join("")
-    : `<tr><td class="px-2 py-6 text-center text-xs text-[#717171]" colspan="4">등록된 담당자가 없습니다.</td></tr>`;
+    : `<tr><td class="px-2 py-6 text-center text-xs text-[#717171]" colspan="5">등록된 담당자가 없습니다.</td></tr>`;
 
-const renderCustomerEditor = (selectedCustomer, canDelete, isDirty = false, saveMessageVisible = false) => `
+const renderCustomerEditor = (selectedCustomer, canDelete, isDirty = false, saveMessageVisible = false, selectedContactIds = new Set()) => `
   <section class="${cx(componentClasses.surface, "flex h-full min-h-0 flex-col overflow-hidden")}" aria-labelledby="customer-editor-title">
     <div class="flex min-h-[73px] items-center justify-between gap-3 border-b border-[#e6e6e6] bg-[#fafafa] p-4">
       <div>
@@ -439,20 +450,24 @@ const renderCustomerEditor = (selectedCustomer, canDelete, isDirty = false, save
           <div>
             <h4 id="contacts-title" class="text-base font-semibold text-[#2a2a2a]">담당자 목록</h4>
           </div>
-          <button class="${getButtonClass({ variant: "primary", size: "md" })}" type="button" data-open-add-contact>담당자 추가</button>
+          <div class="flex shrink-0 items-center gap-2">
+            <button class="${getButtonClass({ variant: "primary", size: "md" })}" type="button" data-open-add-contact>담당자 추가</button>
+            <button class="${getButtonClass({ variant: "secondary", size: "md" })} border-[#f1b8be] text-[#a4262c] hover:bg-[#fff4f5]" type="button" data-open-delete-contact-dialog ${selectedContactIds.size ? "" : "disabled"}>담당자 삭제</button>
+          </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full table-fixed border-collapse text-left text-xs">
             <thead class="bg-[#fafafa] text-xs font-semibold text-[#616161]">
               <tr class="border-b border-[#e6e6e6]">
+                <th class="w-[48px] px-2 py-2 text-center">선택</th>
                 <th class="w-[24%] px-2 py-2">이름</th>
-                <th class="w-[18%] px-2 py-2">직급</th>
-                <th class="w-[24%] px-2 py-2">연락처</th>
-                <th class="w-[34%] px-2 py-2">이메일</th>
+                <th class="w-[16%] px-2 py-2">직급</th>
+                <th class="w-[23%] px-2 py-2">연락처</th>
+                <th class="px-2 py-2">이메일</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[#e6e6e6]">
-              ${renderContactRows(selectedCustomer.contacts)}
+              ${renderContactRows(selectedCustomer.contacts, selectedContactIds)}
             </tbody>
           </table>
         </div>
@@ -606,10 +621,36 @@ const renderDeleteCustomerDialog = ({ step, selectedCustomer }) => {
   `;
 };
 
+const renderDeleteContactDialog = ({ isOpen, selectedCustomer, selectedContactIds }) => {
+  if (!isOpen) return "";
+
+  const selectedContacts = selectedCustomer.contacts.filter((contact) => selectedContactIds.has(contact.id));
+  const names = selectedContacts.map((contact) => contact.name || "이름 미입력").join(", ");
+
+  return `
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-5" data-delete-contact-dialog aria-hidden="false">
+      <section class="w-full max-w-[460px] rounded-lg border border-[#dde6f0] bg-white p-5 shadow-[0_18px_48px_rgba(0,0,0,0.22)]" role="dialog" aria-modal="true" aria-labelledby="delete-contact-title">
+        <div>
+          <p class="text-xs font-semibold text-[#a4262c]">담당자 삭제</p>
+          <h3 id="delete-contact-title" class="mt-1 text-lg font-semibold text-[#242424]">선택한 담당자를 삭제할까요?</h3>
+          <p class="mt-3 text-sm leading-6 text-[#616161]">
+            ${escapeHtml(names || `${selectedContactIds.size}명`)} 담당자 정보가 삭제됩니다. 이 작업은 두 번 다시 되돌릴 수 없습니다.
+          </p>
+        </div>
+        <div class="mt-5 flex justify-end gap-2">
+          <button class="${getButtonClass({ variant: "secondary", size: "md" })}" type="button" data-close-delete-contact>취소</button>
+          <button class="${getButtonClass({ variant: "secondary", size: "md" })} border-[#f1b8be] text-[#a4262c] hover:bg-[#fff4f5]" type="button" data-confirm-delete-contact>삭제</button>
+        </div>
+      </section>
+    </div>
+  `;
+};
+
 const renderCustomerManagementBody = (customers, selectedId, dialogs = {}, dirtyCustomerIds = new Set(), saveMessageVisible = false) => {
   const selectedCustomer = customers.find((customer) => customer.id === selectedId) || customers[0];
   const canDelete = customers.length > 1;
   const isDirty = dirtyCustomerIds.has(selectedCustomer.id);
+  const selectedContactIds = dialogs.selectedContactIds || new Set();
 
   return `
     <section class="grid min-h-[calc(100vh-130px)] items-stretch gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)]">
@@ -642,12 +683,13 @@ const renderCustomerManagementBody = (customers, selectedId, dialogs = {}, dirty
       </section>
 
       <div class="min-h-0" data-customer-editor>
-        ${renderCustomerEditor(selectedCustomer, canDelete, isDirty, saveMessageVisible)}
+        ${renderCustomerEditor(selectedCustomer, canDelete, isDirty, saveMessageVisible, selectedContactIds)}
       </div>
     </section>
     ${renderAddCustomerDialog({ isOpen: dialogs.addCustomerOpen })}
     ${renderAddContactDialog({ isOpen: dialogs.addContactOpen, selectedCustomer })}
     ${renderDeleteCustomerDialog({ step: dialogs.deleteCustomerStep || 0, selectedCustomer })}
+    ${renderDeleteContactDialog({ isOpen: dialogs.deleteContactOpen, selectedCustomer, selectedContactIds })}
   `;
 };
 
@@ -657,6 +699,8 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
   let addCustomerOpen = false;
   let addContactOpen = false;
   let deleteCustomerStep = 0;
+  let deleteContactOpen = false;
+  let selectedContactIds = new Set();
   let dirtyCustomerIds = new Set();
   let saveMessageVisible = false;
   let saveMessageTimer;
@@ -677,6 +721,8 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
         addCustomerOpen,
         addContactOpen,
         deleteCustomerStep,
+        deleteContactOpen,
+        selectedContactIds,
       },
       dirtyCustomerIds,
       saveMessageVisible,
@@ -764,6 +810,8 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
     app.querySelectorAll("[data-select-customer]").forEach((button) => {
       button.addEventListener("click", () => {
         selectedId = button.dataset.selectCustomer;
+        selectedContactIds = new Set();
+        deleteContactOpen = false;
         rerenderWorkspace();
       });
     });
@@ -772,6 +820,8 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
       row.addEventListener("click", (event) => {
         if (event.target.closest("button, input, a, select, textarea")) return;
         selectedId = row.dataset.customerRow;
+        selectedContactIds = new Set();
+        deleteContactOpen = false;
         rerenderWorkspace();
       });
     });
@@ -787,6 +837,30 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
       addContactOpen = true;
       addCustomerOpen = false;
       deleteCustomerStep = 0;
+      deleteContactOpen = false;
+      rerenderWorkspace();
+    });
+
+    app.querySelectorAll("[data-select-contact]").forEach((checkbox) => {
+      checkbox.addEventListener("change", () => {
+        const contactId = checkbox.dataset.selectContact;
+        selectedContactIds = new Set(selectedContactIds);
+        if (checkbox.checked) {
+          selectedContactIds.add(contactId);
+        } else {
+          selectedContactIds.delete(contactId);
+        }
+        deleteContactOpen = false;
+        rerenderWorkspace();
+      });
+    });
+
+    app.querySelector("[data-open-delete-contact-dialog]")?.addEventListener("click", () => {
+      if (!selectedContactIds.size) return;
+      addCustomerOpen = false;
+      addContactOpen = false;
+      deleteCustomerStep = 0;
+      deleteContactOpen = true;
       rerenderWorkspace();
     });
 
@@ -795,6 +869,7 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
       deleteCustomerStep = 1;
       addCustomerOpen = false;
       addContactOpen = false;
+      deleteContactOpen = false;
       rerenderWorkspace();
     });
 
@@ -851,6 +926,8 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
           selectedId = createdCustomer.id;
           addCustomerOpen = false;
           deleteCustomerStep = 0;
+          deleteContactOpen = false;
+          selectedContactIds = new Set();
           dirtyCustomerIds = new Set(dirtyCustomerIds);
           dirtyCustomerIds.delete(selectedId);
           rerenderWorkspace();
@@ -927,6 +1004,7 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
       createContactFromApi(customer.id, values)
         .then((createdContact) => {
           customer.contacts = [...customer.contacts, createdContact];
+          selectedContactIds = new Set();
           customerAnalysisCache.delete(customer.id);
           addContactOpen = false;
           rerenderWorkspace();
@@ -947,6 +1025,31 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
       }),
     );
 
+    app.querySelectorAll("[data-close-delete-contact]").forEach((button) =>
+      button.addEventListener("click", () => {
+        deleteContactOpen = false;
+        rerenderWorkspace();
+      }),
+    );
+
+    app.querySelector("[data-confirm-delete-contact]")?.addEventListener("click", () => {
+      const customer = selectedCustomer();
+      const ids = [...selectedContactIds];
+      if (!customer || !ids.length) return;
+      deleteContactsFromApi(customer.id, ids)
+        .then((contacts) => {
+          customer.contacts = contacts;
+          selectedContactIds = new Set();
+          deleteContactOpen = false;
+          customerAnalysisCache.delete(customer.id);
+          rerenderWorkspace();
+        })
+        .catch(() => {
+          deleteContactOpen = false;
+          rerenderWorkspace();
+        });
+    });
+
     app.querySelector("[data-continue-delete-customer]")?.addEventListener("click", () => {
       deleteCustomerStep = 2;
       rerenderWorkspace();
@@ -959,6 +1062,7 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
         .then(() => {
           customers = customers.filter((customer) => customer.id !== currentId);
           selectedId = customers[0]?.id;
+          selectedContactIds = new Set();
           dirtyCustomerIds = new Set(dirtyCustomerIds);
           dirtyCustomerIds.delete(currentId);
           customerAnalysisCache.delete(currentId);
