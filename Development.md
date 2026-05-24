@@ -116,7 +116,9 @@ Non-negotiable frontend structure rule:
 Current frontend entry points:
 
 - `index.html`: main page markup and Tailwind utility implementation
-- `src/main.js`: Vite entry point and view router only. It selects the customer portal or accountant console by URL state.
+- `src/main.js`: Vite entry point and view router only. It selects the public landing page, customer portal, or accountant console by URL state.
+- `src/landingPage.js`: public landing page renderer for the root route.
+- `src/landingLayout.html`: imported MVP landing-page layout copied from the approved standalone HTML draft.
 - `src/customerPortal.js`: customer submission portal rendering, state, copy-editing, upload overlay, and checklist interactions.
 - `public/fonts/PretendardVariable.woff2`: self-hosted Pretendard variable font
 - `src/customerPortalContent.js`: editable customer portal copy and checklist data
@@ -189,12 +191,15 @@ Current verified baseline:
 
 The frontend now has separate screen modules. Keep them separate:
 
+- Public landing route: `http://127.0.0.1:4173/`
+- Accountant console route: `http://127.0.0.1:4173/console`
+- Accountant customer management route: `http://127.0.0.1:4173/console?page=customers`
+- Accountant submission request route: `http://127.0.0.1:4173/console?page=submission-requests`
+- Accountant submission review route: `http://127.0.0.1:4173/console?page=review`
+- Accountant service management route: `http://127.0.0.1:4173/console?page=templates`
 - Customer portal route: `http://127.0.0.1:4173/submit/demo-token`
-- Accountant console route: `http://127.0.0.1:4173/`
-- Accountant customer management route: `http://127.0.0.1:4173/?page=customers`
-- Accountant submission request route: `http://127.0.0.1:4173/?page=submission-requests`
 
-Production entry rule: `/` is the accountant console. Customer-facing pages are only under `/submit/{token}` so a shared KakaoTalk/email link stays stable for that client request.
+Production entry rule: `/` is the public MVP landing page. The landing page's MVP demo buttons route to `/console`, which is the accountant-facing console. Customer-facing pages stay under `/submit/{token}` so a shared KakaoTalk/email link stays stable for that client request.
 
 `src/main.js` must remain a thin router. Do not put customer or accountant screen markup back into it.
 
