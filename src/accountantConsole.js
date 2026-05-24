@@ -22,6 +22,8 @@ const renderCustomerHoverBubble = ({ bubbleText, customers, title, tone, titleDa
 `;
 
 const renderSummaryHelper = (item) => {
+  const helperText = item.helper || `${item.value || 0}개사`;
+
   if (item.dueCustomers?.length) {
     return renderCustomerHoverBubble({
       bubbleText: `${item.dueCustomers.length}개사`,
@@ -34,14 +36,14 @@ const renderSummaryHelper = (item) => {
 
   if (item.customers?.length) {
     return renderCustomerHoverBubble({
-      bubbleText: item.helper,
+      bubbleText: helperText,
       customers: item.customers,
       title: item.hoverTitle || item.label,
       tone: "primary",
     });
   }
 
-  return `<span class="${cx(componentClasses.pill, getAccountantToneClass("primary"), "min-h-7 px-3 text-sm")}">${escapeHtml(item.helper)}</span>`;
+  return `<span class="${cx(componentClasses.pill, getAccountantToneClass("primary"), "min-h-7 px-3 text-sm")}">${escapeHtml(helperText)}</span>`;
 };
 
 const formatReceivedAt = (value) => {

@@ -807,6 +807,7 @@ const fetchDashboardRuntime = async () => {
       {
         label: "자료 미제출 고객사",
         value: String(dueCustomers.length),
+        helper: `${dueCustomers.length}개사`,
         alertDays,
         dueCustomers,
         tone: "warning",

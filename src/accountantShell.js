@@ -110,6 +110,17 @@ const renderNotificationItem = (item) => `
   </article>
 `;
 
+const renderNotificationEmptyState = () => `
+  <div class="px-4 py-6 text-center text-sm font-semibold text-[#616161]" data-notification-empty>
+    알림이 없습니다.
+  </div>
+`;
+
+const renderNotificationItems = () =>
+  shellContent.notifications.length
+    ? shellContent.notifications.map((item) => renderNotificationItem(item)).join("")
+    : renderNotificationEmptyState();
+
 const renderNotifications = () => `
   <div class="relative" data-notification-root>
     <button class="relative inline-flex size-9 items-center justify-center rounded-md border border-white/20 bg-white/10 text-white transition-colors hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" type="button" data-notification-toggle aria-label="알림 열기" aria-expanded="false">
@@ -122,7 +133,7 @@ const renderNotifications = () => `
     <section class="pointer-events-none absolute right-0 top-11 z-40 w-[360px] translate-y-[-6px] scale-[0.98] overflow-hidden rounded-lg border border-[#dde6f0] bg-white text-[#242424] opacity-0 shadow-[0_16px_40px_rgba(0,0,0,0.18)] transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)]" data-notification-toast aria-label="실시간 알림" aria-live="polite" aria-hidden="true"></section>
     <section class="pointer-events-none absolute right-0 top-11 z-30 w-[360px] translate-y-[-6px] scale-[0.98] overflow-hidden rounded-lg border border-[#dde6f0] bg-white text-[#242424] opacity-0 shadow-[0_16px_40px_rgba(0,0,0,0.18)] transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)]" data-notification-list aria-label="알림 목록" aria-hidden="true">
       <div class="max-h-80 overflow-y-auto" data-notification-items>
-        ${shellContent.notifications.map((item) => renderNotificationItem(item)).join("")}
+        ${renderNotificationItems()}
       </div>
     </section>
   </div>
@@ -181,7 +192,7 @@ const attachShellInteractions = (app) => {
 
   const renderNotificationList = () => {
     if (notificationItems) {
-      notificationItems.innerHTML = shellContent.notifications.map((item) => renderNotificationItem(item)).join("");
+      notificationItems.innerHTML = renderNotificationItems();
     }
     notificationTotal = shellContent.notifications.length;
     if (notificationCount) notificationCount.textContent = String(notificationTotal);
@@ -228,9 +239,8 @@ const attachShellInteractions = (app) => {
       receivedAt: getNotificationTimeValue(notification.receivedAt || notification.createdAt || notification.time),
     };
 
-    notificationTotal += 1;
-    if (notificationCount) notificationCount.textContent = String(notificationTotal);
-    notificationItems?.insertAdjacentHTML("afterbegin", renderNotificationItem(item));
+    shellContent.notifications = [item, ...shellContent.notifications];
+    renderNotificationList();
     if (notificationToast) notificationToast.innerHTML = renderNotificationItem(item);
     setNotificationPanelOpen(false);
     setNotificationToastOpen(true);
