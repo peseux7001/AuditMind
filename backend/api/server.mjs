@@ -161,6 +161,8 @@ const mapCustomerRow = (row, contacts = []) => ({
   memo: "",
   contacts,
   aiAnalysis: row.ai_analysis || "",
+  aiAnalysisSourceSnapshot: normalizeMetadata(row.ai_analysis_source_snapshot),
+  submissionSummary: normalizeMetadata(row.submission_summary),
 });
 
 const mapRequestTemplateRow = (row) => ({
@@ -563,7 +565,8 @@ const fetchCustomers = async () => {
       c.business_type,
       c.business_item,
       c.business_address,
-      COALESCE(caa.analysis_text, '') AS ai_analysis
+      COALESCE(caa.analysis_text, '') AS ai_analysis,
+      caa.source_snapshot AS ai_analysis_source_snapshot
     FROM customers c
     LEFT JOIN customer_ai_analyses caa ON caa.customer_id = c.id
     ORDER BY c.created_at ASC, c.name ASC
@@ -579,7 +582,94 @@ const fetchCustomers = async () => {
     contacts.push(mapContactRow(row));
     contactsByCustomerId.set(row.customer_id, contacts);
   }
-  return customerRows.map((row) => mapCustomerRow(row, contactsByCustomerId.get(row.id) || []));
+
+  const { rows: summaryRows } = await pool.query(`
+    SELECT
+      c.id AS customer_id,
+      jsonb_build_object(
+        'requestCount', COUNT(DISTINCT csr.id)::int,
+        'openRequestCount', COUNT(DISTINCT csr.id) FILTER (WHERE csr.status = 'open')::int,
+        'requestedItemCount', COUNT(csi.id)::int,
+        'acceptedItemCount', COUNT(csi.id) FILTER (WHERE csi.status IN ('approved', 'submitted'))::int,
+        'finalSubmittedItemCount', COUNT(csi.id) FILTER (WHERE csi.status = 'submitted')::int,
+        'failedItemCount', COUNT(csi.id) FILTER (WHERE csi.status = 'rejected')::int,
+        'processingItemCount', COUNT(csi.id) FILTER (WHERE csi.status = 'processing')::int,
+        'missingItemCount', COUNT(csi.id) FILTER (WHERE csi.status = 'not_received')::int,
+        'recentRequests', COALESCE(
+          (
+            SELECT jsonb_agg(
+              jsonb_build_object(
+                'title', recent.request_title,
+                'createdAt', to_char(recent.created_at AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD HH24:MI'),
+                'dueDate', COALESCE(to_char(recent.due_date, 'YYYY-MM-DD'), ''),
+                'status', recent.status,
+                'total', recent.total_count,
+                'accepted', recent.accepted_count,
+                'failed', recent.failed_count,
+                'missing', recent.missing_count
+              )
+              ORDER BY recent.created_at DESC
+            )
+            FROM (
+              SELECT
+                csr_recent.id,
+                csr_recent.request_title,
+                csr_recent.created_at,
+                csr_recent.due_date,
+                csr_recent.status,
+                COUNT(csi_recent.id)::int AS total_count,
+                COUNT(csi_recent.id) FILTER (WHERE csi_recent.status IN ('approved', 'submitted'))::int AS accepted_count,
+                COUNT(csi_recent.id) FILTER (WHERE csi_recent.status = 'rejected')::int AS failed_count,
+                COUNT(csi_recent.id) FILTER (WHERE csi_recent.status = 'not_received')::int AS missing_count
+              FROM customer_submission_requests csr_recent
+              LEFT JOIN customer_submission_items csi_recent ON csi_recent.request_id = csr_recent.id
+              WHERE csr_recent.customer_name = c.name
+              GROUP BY csr_recent.id
+              ORDER BY csr_recent.created_at DESC
+              LIMIT 3
+            ) recent
+          ),
+          '[]'::jsonb
+        ),
+        'recentFailedItems', COALESCE(
+          (
+            SELECT jsonb_agg(
+              jsonb_build_object(
+                'requestTitle', failed.request_title,
+                'documentName', failed.requested_name,
+                'message', COALESCE(failed.review_message, '')
+              )
+              ORDER BY failed.updated_at DESC
+            )
+            FROM (
+              SELECT csr_failed.request_title, csi_failed.requested_name, csi_failed.review_message, csi_failed.updated_at
+              FROM customer_submission_requests csr_failed
+              JOIN customer_submission_items csi_failed ON csi_failed.request_id = csr_failed.id
+              WHERE csr_failed.customer_name = c.name
+                AND csi_failed.status = 'rejected'
+              ORDER BY csi_failed.updated_at DESC
+              LIMIT 5
+            ) failed
+          ),
+          '[]'::jsonb
+        )
+      ) AS submission_summary
+    FROM customers c
+    LEFT JOIN customer_submission_requests csr ON csr.customer_name = c.name
+    LEFT JOIN customer_submission_items csi ON csi.request_id = csr.id
+    GROUP BY c.id, c.name
+  `);
+  const summariesByCustomerId = new Map(summaryRows.map((row) => [row.customer_id, row.submission_summary || {}]));
+
+  return customerRows.map((row) =>
+    mapCustomerRow(
+      {
+        ...row,
+        submission_summary: summariesByCustomerId.get(row.id) || {},
+      },
+      contactsByCustomerId.get(row.id) || [],
+    ),
+  );
 };
 
 const deriveReviewStatusLabel = (row) => {

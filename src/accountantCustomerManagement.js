@@ -68,11 +68,68 @@ const renderInlineMessage = (value) => renderInlineMessageSegments(parseInlineMe
 const getInlineMessageLength = (value) =>
   parseInlineMessageSegments(value).reduce((total, segment) => total + segment.text.length, 0);
 
+const getCustomerSubmissionSummary = (customer) => ({
+  requestCount: Number(customer.submissionSummary?.requestCount || 0),
+  openRequestCount: Number(customer.submissionSummary?.openRequestCount || 0),
+  requestedItemCount: Number(customer.submissionSummary?.requestedItemCount || 0),
+  acceptedItemCount: Number(customer.submissionSummary?.acceptedItemCount || 0),
+  finalSubmittedItemCount: Number(customer.submissionSummary?.finalSubmittedItemCount || 0),
+  failedItemCount: Number(customer.submissionSummary?.failedItemCount || 0),
+  processingItemCount: Number(customer.submissionSummary?.processingItemCount || 0),
+  missingItemCount: Number(customer.submissionSummary?.missingItemCount || 0),
+  recentRequests: Array.isArray(customer.submissionSummary?.recentRequests) ? customer.submissionSummary.recentRequests : [],
+  recentFailedItems: Array.isArray(customer.submissionSummary?.recentFailedItems) ? customer.submissionSummary.recentFailedItems : [],
+});
+
+const buildCustomerAnalysisSourceSnapshot = (customer) => ({
+  company: customer.company,
+  businessNumber: customer.businessNumber,
+  ceoName: customer.ceoName,
+  businessType: customer.businessType,
+  businessItem: customer.businessItem,
+  address: customer.address,
+  contactCount: customer.contacts.length,
+  primaryContactId: getPrimaryContact(customer)?.id || "",
+  submissionSummary: getCustomerSubmissionSummary(customer),
+});
+
+const isSameSnapshot = (left, right) => JSON.stringify(left || {}) === JSON.stringify(right || {});
+
+const formatSubmissionSummaryForPrompt = (customer) => {
+  const summary = getCustomerSubmissionSummary(customer);
+  const recentRequests = summary.recentRequests
+    .map(
+      (request) =>
+        `${request.title || "제목 없음"} / 요청일 ${request.createdAt || "-"} / 마감 ${request.dueDate || "-"} / 접수 ${request.accepted || 0}/${request.total || 0} / 실패 ${request.failed || 0} / 미제출 ${request.missing || 0}`,
+    )
+    .join("\n");
+  const failedItems = summary.recentFailedItems
+    .map((item) => `${item.requestTitle || "요청명 없음"} / ${item.documentName || "자료명 없음"} / ${item.message || "사유 미기록"}`)
+    .join("\n");
+
+  return [
+    `자료요청 수: ${summary.requestCount}`,
+    `진행 중 요청 수: ${summary.openRequestCount}`,
+    `요청 자료 수: ${summary.requestedItemCount}`,
+    `AI 검수 통과 또는 최종 접수 자료 수: ${summary.acceptedItemCount}`,
+    `최종 접수 자료 수: ${summary.finalSubmittedItemCount}`,
+    `업로드 후 오류 처리된 자료 수: ${summary.failedItemCount}`,
+    `분석 중 자료 수: ${summary.processingItemCount}`,
+    `미제출 자료 수: ${summary.missingItemCount}`,
+    `최근 자료요청:\n${recentRequests || "없음"}`,
+    `최근 오류 자료:\n${failedItems || "없음"}`,
+  ].join("\n");
+};
+
 const buildCustomerAnalysisFallback = (customer) => {
   const primaryContact = getPrimaryContact(customer);
   const industry = [customer.businessType, customer.businessItem].filter(Boolean).join(" / ") || "업종 정보 미입력";
   const contactText = primaryContact ? `${primaryContact.name} ${primaryContact.title || ""}`.trim() : "대표 담당자 미등록";
-  return `**${customer.company}**는 **${industry}** 고객사입니다. 사업자등록번호, 대표자명, 업태와 업종을 기준으로 고객사 기본정보가 관리되고 있습니다. 현재 등록된 담당자는 **${customer.contacts.length}명**이며, 주요 연락 창구는 **${contactText}**입니다. 자료요청을 발송하기 전에는 대표 담당자의 연락처와 이메일이 최신인지 먼저 확인하는 것이 좋습니다. 반복 요청이 많은 고객사라면 **서비스 관리를 활용해 제출자료 누락을 줄이는 방향**이 적합합니다. 이후 검토 단계에서는 고객사별 제출률, 오류 이력, 미접수 자료를 함께 보면서 재요청 여부를 판단하면 됩니다.`;
+  const summary = getCustomerSubmissionSummary(customer);
+  const submissionText = summary.requestedItemCount
+    ? `현재 요청 자료 **${summary.requestedItemCount}건** 중 검수 통과 또는 최종 접수된 자료는 **${summary.acceptedItemCount}건**이고, 오류 처리된 자료는 **${summary.failedItemCount}건**, 미제출 자료는 **${summary.missingItemCount}건**입니다.`
+    : "아직 연결된 자료제출 요청 이력은 없습니다.";
+  return `**${customer.company}**는 **${industry}** 고객사입니다. 사업자등록번호, 대표자명, 업태와 업종을 기준으로 고객사 기본정보가 관리되고 있습니다. 현재 등록된 담당자는 **${customer.contacts.length}명**이며, 주요 연락 창구는 **${contactText}**입니다. ${submissionText} 자료요청을 발송하거나 재요청할 때는 제출 성공 이력과 오류 이력을 함께 보면서 필요한 자료만 좁혀 안내하는 것이 좋습니다.`;
 };
 
 const buildCustomerAnalysisPrompt = (customer, retryCount) => {
@@ -88,6 +145,8 @@ const buildCustomerAnalysisPrompt = (customer, retryCount) => {
     "회계법인 내부 고객사 관리 화면에 표시할 AI 고객사 분석을 한국어로 작성하세요.",
     "5~7문장으로 작성하세요.",
     "회계사가 고객사를 빠르게 파악할 수 있도록 기본정보, 담당자 상태, 자료요청 관점, 잠재 리스크, 다음 확인 포인트를 요약하세요.",
+    "아래 제출 현황 DB 요약을 반드시 참고해 현재 제출된 자료, 업로드 후 오류 처리된 자료, 미제출 자료를 자연스럽게 언급하세요.",
+    "오류 자료가 있으면 고객 탓처럼 쓰지 말고 재요청 또는 확인이 필요한 자료로 부드럽게 표현하세요.",
     "너무 단정적인 판단은 피하고, 현재 입력된 정보 기준의 관리 참고사항처럼 작성하세요.",
     "표, 번호 목록은 쓰지 마세요.",
     "중요하다고 판단한 핵심 표현 2~4개만 **강조**로 감싸세요.",
@@ -103,6 +162,7 @@ const buildCustomerAnalysisPrompt = (customer, retryCount) => {
     `기존 메모: ${customer.memo || "없음"}`,
     `대표 담당자: ${primaryContact ? `${primaryContact.name} / ${primaryContact.title || "직급 미입력"}` : "없음"}`,
     `담당자 목록:\n${contacts || "없음"}`,
+    `제출 현황 DB 요약:\n${formatSubmissionSummaryForPrompt(customer)}`,
     retryInstruction,
   ].join("\n");
 };
@@ -245,15 +305,7 @@ const saveCustomerAiAnalysisToApi = async (customer, analysisText) =>
     body: JSON.stringify({
       analysisText,
       modelName: qwenModel,
-      sourceSnapshot: {
-        company: customer.company,
-        businessNumber: customer.businessNumber,
-        ceoName: customer.ceoName,
-        businessType: customer.businessType,
-        businessItem: customer.businessItem,
-        address: customer.address,
-        contactCount: customer.contacts.length,
-      },
+      sourceSnapshot: buildCustomerAnalysisSourceSnapshot(customer),
     }),
   });
 
@@ -665,14 +717,15 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
     const customer = selectedCustomer();
     if (!target || !customer) return;
 
+    const currentSnapshot = buildCustomerAnalysisSourceSnapshot(customer);
     const cachedAnalysis = customerAnalysisCache.get(customer.id);
-    if (cachedAnalysis) {
-      target.innerHTML = renderInlineMessage(cachedAnalysis);
+    if (cachedAnalysis && isSameSnapshot(cachedAnalysis.snapshot, currentSnapshot)) {
+      target.innerHTML = renderInlineMessage(cachedAnalysis.text);
       return;
     }
 
-    if (customer.aiAnalysis) {
-      customerAnalysisCache.set(customer.id, customer.aiAnalysis);
+    if (customer.aiAnalysis && isSameSnapshot(customer.aiAnalysisSourceSnapshot, currentSnapshot)) {
+      customerAnalysisCache.set(customer.id, { snapshot: currentSnapshot, text: customer.aiAnalysis });
       target.innerHTML = renderInlineMessage(customer.aiAnalysis);
       return;
     }
@@ -689,16 +742,18 @@ const attachCustomerManagementInteractions = (app, initialCustomers) => {
         const message = await getQwenCustomerAnalysis(customer, timeoutController.signal);
         clearTimeout(timeoutId);
         if (signal.aborted) return;
-        customerAnalysisCache.set(customer.id, message);
+        customerAnalysisCache.set(customer.id, { snapshot: currentSnapshot, text: message });
         customer.aiAnalysis = message;
+        customer.aiAnalysisSourceSnapshot = currentSnapshot;
         saveCustomerAiAnalysisToApi(customer, message).catch(() => {});
         streamCustomerAnalysis(target, message);
       } catch {
         clearTimeout(timeoutId);
         if (signal.aborted) return;
         const fallback = buildCustomerAnalysisFallback(customer);
-        customerAnalysisCache.set(customer.id, fallback);
+        customerAnalysisCache.set(customer.id, { snapshot: currentSnapshot, text: fallback });
         customer.aiAnalysis = fallback;
+        customer.aiAnalysisSourceSnapshot = currentSnapshot;
         saveCustomerAiAnalysisToApi(customer, fallback).catch(() => {});
         streamCustomerAnalysis(target, fallback);
       }
