@@ -1,6 +1,7 @@
 import landingHtml from "./landingLayout.html?raw";
 
 const CONSOLE_PATH = "/console";
+const SESSION_STORAGE_KEY = "auditmind.landingSessionId";
 
 const extractFirstMatch = (pattern, fallback = "") => landingHtml.match(pattern)?.[1] || fallback;
 
@@ -24,6 +25,48 @@ const ensureLandingFont = () => {
     "https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Serif+KR:wght@400;600;700;900&display=swap";
   font.dataset.auditmindLandingFont = "true";
   document.head.append(font);
+};
+
+const getLandingSessionId = () => {
+  try {
+    const existing = window.localStorage.getItem(SESSION_STORAGE_KEY);
+    if (existing) return existing;
+    const nextId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    window.localStorage.setItem(SESSION_STORAGE_KEY, nextId);
+    return nextId;
+  } catch {
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+};
+
+const logLandingEvent = (eventType) => {
+  const payload = {
+    eventType,
+    sessionId: getLandingSessionId(),
+    path: `${window.location.pathname}${window.location.search}`,
+    referrer: document.referrer || "",
+    metadata: {
+      title: document.title,
+    },
+  };
+  const body = JSON.stringify(payload);
+
+  try {
+    if (navigator.sendBeacon) {
+      const blob = new Blob([body], { type: "application/json" });
+      navigator.sendBeacon("/api/landing-events", blob);
+      return;
+    }
+  } catch {
+    // Fall through to fetch below.
+  }
+
+  fetch("/api/landing-events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body,
+    keepalive: true,
+  }).catch(() => {});
 };
 
 const bindLandingInteractions = () => {
@@ -56,6 +99,7 @@ const bindLandingInteractions = () => {
     if (!text.includes("MVP")) return;
     element.addEventListener("click", (event) => {
       event.preventDefault();
+      logLandingEvent("console_demo_click");
       window.location.href = CONSOLE_PATH;
     });
   });
@@ -72,5 +116,6 @@ export const renderLandingPage = (app) => {
       ${landingBody.replace(/<script>[\s\S]*?<\/script>/gi, "")}
     </div>
   `;
+  logLandingEvent("landing_view");
   bindLandingInteractions();
 };

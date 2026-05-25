@@ -143,6 +143,11 @@ Current frontend entry points:
 - `database/migrations/002_request_template_master.sql`: PostgreSQL schema for accounting-firm request templates and template-document mappings
 - `database/migrations/003_customer_master.sql`: PostgreSQL schema for customer company and customer contact master tables
 - `database/migrations/004_submission_review_notes.sql`: PostgreSQL schema extension for accountant internal memo and customer-facing document comments
+- `database/migrations/005_customer_portal_runtime.sql`: PostgreSQL schema extension for customer request messages submitted through the portal
+- `database/migrations/006_document_type_dedupe.sql`: PostgreSQL cleanup for duplicate document names
+- `database/migrations/007_app_runtime_state.sql`: PostgreSQL schema for app settings, notifications, customer AI analysis, and viewer artifacts
+- `database/migrations/008_submission_request_customer_link.sql`: PostgreSQL schema extension linking submission requests to customer master records
+- `database/migrations/009_landing_visit_events.sql`: PostgreSQL schema for anonymous public landing-page visit/click events
 - `database/seeds/001_document_type_seed.sql`: Korean accounting document type seed data
 - `database/seeds/002_document_required_fields_seed.sql`: minimum required-field anchors for OCR/Qwen document judgment and confidence scoring
 - `database/seeds/003_request_template_seed.sql`: Korean accounting-firm request template seed data
@@ -202,6 +207,13 @@ The frontend now has separate screen modules. Keep them separate:
 Production entry rule: `/` is the public MVP landing page. The landing page's MVP demo buttons route to `/console`, which is the accountant-facing console. Customer-facing pages stay under `/submit/{token}` so a shared KakaoTalk/email link stays stable for that client request.
 
 `src/main.js` must remain a thin router. Do not put customer or accountant screen markup back into it.
+
+Landing-page telemetry:
+
+- The public landing page records anonymous pre-login events to `landing_visit_events`.
+- Recorded events: `landing_view`, `console_demo_click`.
+- Stored fields: event type, generated browser session ID, path, referrer, user agent, client IP, metadata, timestamp.
+- This does not identify a real person by itself. It is only for MVP traffic and demo-funnel checks unless a later login or explicit lead form is added.
 
 ## Current Server Deployment
 

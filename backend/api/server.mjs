@@ -2582,6 +2582,50 @@ const saveCustomerAiAnalysis = async (customerId, payload) => {
   return { customerId, analysisText };
 };
 
+const getClientIp = (req) => {
+  const forwardedFor = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  return (
+    String(req.headers["cf-connecting-ip"] || "").trim() ||
+    forwardedFor ||
+    String(req.headers["x-real-ip"] || "").trim() ||
+    req.socket?.remoteAddress ||
+    ""
+  );
+};
+
+const createLandingVisitEvent = async (req, payload) => {
+  const eventType = String(payload.eventType || "").trim();
+  if (!["landing_view", "console_demo_click"].includes(eventType)) {
+    const error = new Error("지원하지 않는 랜딩 이벤트입니다.");
+    error.status = 400;
+    throw error;
+  }
+
+  await pool.query(
+    `
+      INSERT INTO landing_visit_events (
+        event_type,
+        session_id,
+        path,
+        referrer,
+        user_agent,
+        client_ip,
+        metadata
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
+    `,
+    [
+      eventType,
+      String(payload.sessionId || "").slice(0, 120),
+      String(payload.path || "").slice(0, 500),
+      String(payload.referrer || "").slice(0, 1000),
+      String(req.headers["user-agent"] || "").slice(0, 1000),
+      getClientIp(req).slice(0, 120),
+      JSON.stringify(normalizeMetadata(payload.metadata)),
+    ],
+  );
+};
+
 const routeRequest = async (req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
 
@@ -2592,6 +2636,13 @@ const routeRequest = async (req, res) => {
 
   if (url.pathname === "/api/shell" && req.method === "GET") {
     sendJson(res, 200, await fetchShellRuntime());
+    return;
+  }
+
+  if (url.pathname === "/api/landing-events" && req.method === "POST") {
+    const payload = await readJsonBody(req);
+    await createLandingVisitEvent(req, payload);
+    sendJson(res, 201, { ok: true });
     return;
   }
 
