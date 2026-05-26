@@ -66,12 +66,12 @@ const getPageAriaLabel = (item, pageNumber) => {
 
 const getRecognitionBoxClass = (confidence) => {
   if (confidence === "낮음" || confidence === "미확인") {
-    return "border-[#d13438]/80 bg-[#d13438]/[0.07]";
+    return "border-[#d13438] bg-[#d13438]/[0.11]";
   }
   if (confidence === "중간") {
-    return "border-[#c19c00]/80 bg-[#c19c00]/[0.07]";
+    return "border-[#b38600] bg-[#c19c00]/[0.12]";
   }
-  return "border-[#4f9cf9]/80 bg-[#4f9cf9]/[0.06]";
+  return "border-[#0f6cbd] bg-[#4f9cf9]/[0.12]";
 };
 
 const getRecognitionColor = (confidence) => {
@@ -93,13 +93,13 @@ const renderRecognitionOverlays = (item, pageNumber) => {
   if (!fieldsWithRegions.length) return "";
 
   return `
-    <div class="pointer-events-none absolute inset-0 z-10" aria-hidden="true">
+    <div class="pointer-events-none absolute inset-0 z-30" aria-hidden="true">
       ${fieldsWithRegions
         .map((field) => {
           const region = field.sourceRegion;
           return `
             <div class="${cx(
-              "absolute rounded border-2 opacity-95 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.72),0_1px_4px_rgba(4,56,115,0.10)] backdrop-blur-[0.5px] transition-[opacity,box-shadow,transform,border-width] duration-150",
+              "absolute rounded-[5px] border-[3px] opacity-100 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.88),0_0_0_1px_rgba(4,56,115,0.18),0_4px_12px_rgba(4,56,115,0.16)] backdrop-blur-[0.5px] transition-[opacity,box-shadow,transform,border-width] duration-150",
               getRecognitionBoxClass(field.confidence),
             )}" data-recognition-region="${escapeHtml(field.label)}" data-recognition-color="${escapeHtml(getRecognitionColor(field.confidence))}" title="${escapeHtml(field.label)}: ${escapeHtml(field.value || "미확인")}" style="left:${escapeHtml(region.x)}%;top:${escapeHtml(region.y)}%;width:${escapeHtml(region.width)}%;height:${escapeHtml(region.height)}%;"></div>
           `;
@@ -576,6 +576,8 @@ const attachReviewInteractions = (app) => {
       drawRecognitionConnector(fieldLabel);
       window.setTimeout(() => drawRecognitionConnector(fieldLabel), 180);
       window.setTimeout(() => drawRecognitionConnector(fieldLabel), 360);
+      window.setTimeout(() => drawRecognitionConnector(fieldLabel), 700);
+      window.setTimeout(() => drawRecognitionConnector(fieldLabel), 1050);
     };
 
     const redrawActiveConnector = () => {
