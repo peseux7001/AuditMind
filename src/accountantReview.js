@@ -83,6 +83,8 @@ const getRecognitionColor = (confidence) => {
 const hasRenderableSourceRegion = (field, pageNumber) => {
   const region = field?.sourceRegion;
   if (!region || Number(region.page || 1) !== Number(pageNumber)) return false;
+  const trustedSource = String(region.source || region.provider || region.origin || "").toLowerCase();
+  if (!(trustedSource === "ocr" || trustedSource === "paddleocr" || region.verified === true)) return false;
   return ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(region[key])));
 };
 

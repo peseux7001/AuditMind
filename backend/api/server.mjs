@@ -247,6 +247,10 @@ const normalizeRawOutput = (value) => (value && typeof value === "object" && !Ar
 
 const normalizeReviewSourceRegion = (value) => {
   if (!value || typeof value !== "object") return null;
+  const trustedSource = String(value.source || value.provider || value.origin || "").toLowerCase();
+  const isTrusted = trustedSource === "ocr" || trustedSource === "paddleocr" || value.verified === true;
+  if (!isTrusted) return null;
+
   const regionSource = Array.isArray(value.bbox) && !value.sourceRegion ? value.bbox : value.sourceRegion || value.region || value;
   if (Array.isArray(regionSource)) {
     const [x, y, width, height] = regionSource.map((part) => Number(part));
@@ -1682,6 +1686,10 @@ const clampPercent = (value) => {
 
 const normalizeSourceRegion = (value) => {
   if (!value || typeof value !== "object") return null;
+  const trustedSource = String(value.source || value.provider || value.origin || "").toLowerCase();
+  const isTrusted = trustedSource === "ocr" || trustedSource === "paddleocr" || value.verified === true;
+  if (!isTrusted) return null;
+
   const regionSource = Array.isArray(value.bbox) && !value.sourceRegion ? value.bbox : value.sourceRegion || value;
   if (Array.isArray(regionSource)) {
     const [x, y, width, height] = regionSource.map(clampPercent);
@@ -1761,16 +1769,14 @@ const callQwenDocumentJudgment = async ({ fileBuffer, mimeType, originalFilename
     "requiredFields의 required=false 항목은 참고 항목입니다. 참고 항목이 없거나 흐려도 그것만으로 reject하지 마세요.",
     "띄어쓰기, 괄호, 약간 다른 표현은 엄격하게 비교하지 말고 같은 의미와 사용 가능한 값인지 기준으로 판단하세요.",
     "fields 배열에는 requiredFields에 포함된 항목을 가능한 한 같은 label로 반환하세요.",
-    "원본 이미지가 제공된 경우 각 필드마다 사람이 눈으로 확인할 수 있는 위치를 sourceRegion에 넣으세요.",
-    "sourceRegion은 원본 표시 페이지 기준 퍼센트 좌표입니다. 형식은 {\"page\":1,\"x\":0,\"y\":0,\"width\":10,\"height\":5}입니다.",
-    "sourceRegion을 확신할 수 없으면 억지로 만들지 말고 생략하세요. 그러나 값이 보이는 경우에는 가능한 한 넣어야 합니다.",
+    "fields에는 값과 신뢰도만 반환하세요. 원본 위치 좌표나 sourceRegion은 반환하지 마세요.",
     "decision은 내부 시스템용 값입니다. reviewMessage에는 match, possible_match, reject, undecided, confidence, OCR, Qwen, JSON, 필수 항목 같은 내부 용어를 절대 쓰지 마세요.",
     "reviewMessage는 고객이 보는 안내문입니다. 정중하고 짧은 한국어 문장으로, 왜 다시 업로드해야 하는지와 어떤 자료를 올리면 되는지만 안내하세요.",
     "자료가 충분히 확인되면 reviewMessage에는 접수 가능한 상태임을 자연스럽게 안내하세요.",
     "자료가 애매하거나 부족하면 reviewMessage에는 원본 파일, 전체 문서, 더 선명한 자료 중 무엇을 다시 올리면 되는지 안내하세요.",
     "반드시 JSON만 반환하세요.",
     "스키마:",
-    '{"matchedItemId":"uuid 또는 빈 문자열","decision":"match|possible_match|reject|undecided","confidence":0.0,"reviewMessage":"고객에게 보여줄 한국어 문장","reason":"판정 근거","fields":[{"label":"필드명","value":"값 또는 미확인","confidence":"높음|중간|낮음|미확인","sourceRegion":{"page":1,"x":0,"y":0,"width":10,"height":5}}]}',
+    '{"matchedItemId":"uuid 또는 빈 문자열","decision":"match|possible_match|reject|undecided","confidence":0.0,"reviewMessage":"고객에게 보여줄 한국어 문장","reason":"판정 근거","fields":[{"label":"필드명","value":"값 또는 미확인","confidence":"높음|중간|낮음|미확인"}]}',
     `파일명: ${originalFilename}`,
     "요청자료 후보:",
     requestedSummary,
