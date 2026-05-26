@@ -307,8 +307,8 @@ Current page behavior:
   - ZIP children with unsupported or executable extensions are ignored and are not stored or analyzed. They must not reject the whole archive when at least one supported child file is present.
   - CSV/TSV, XLSX/XLSM, DOCX, and HWPX can provide extracted text/table evidence to Qwen. Images still use PaddleOCR-VL first. Legacy XLS/DOC/HWP remain supported inputs but depend on the configured converters listed below.
   - Image/PDF uploads run the official PaddleOCR-VL pipeline at customer-upload time when the runtime has `AUDITMIND_PADDLE_OCR_PYTHON` available. The pipeline artifacts are stored under `public/uploads/{request_id}/_ocr/{uploaded_file_id}/`.
-  - Qwen must not invent visual overlay coordinates. The backend only persists `sourceRegion` when a Qwen field value can be matched back to an official PaddleOCR block bbox. Persisted regions must include `source: "paddleocr"` and `verified: true`.
-  - Accountant-facing overlays and connector lines are rendered only from those persisted, verified PaddleOCR regions. If no verified region exists, the accountant page must show the field table without an overlay rather than drawing guessed boxes.
+  - Overlay coordinates have two sources. PaddleOCR block bboxes are stored as `source: "paddleocr", verified: true`; Qwen visual estimates are stored as `source: "qwen", verified: false`.
+  - Accountant-facing overlays and connector lines render both sources. Qwen regions are styled as estimated/dashed regions and are only visual hints for human review, not exact evidence coordinates.
   - `PUT /api/submission-portal/:token/customer-request` stores the customer-written `요청사항` as draft or submitted.
   - `PUT /api/submission-portal/:token/items/:item_id/final-submit` marks an approved checklist row as `접수완료`.
   - `GET /api/submission-files/:file_id` streams the stored uploaded file for download/review links.
@@ -521,8 +521,11 @@ Current review behavior:
 - Never run OCR, Qwen, file conversion, document routing, or confidence scoring from the accountant review page load. The review page must only read persisted results produced by the upload/background-processing pipeline.
 - Customer upload or final-submission events create processing jobs. Those jobs produce and persist the display-rendered file, OCR/text artifact, Qwen JSON judgment, required-field values, confidence score, evidence, and suggested review memo.
 - Overlay geometry is also upload-time state. Field bounding boxes, page numbers, highlight colors, and source-region coordinates must be computed and persisted before the accountant opens the review page.
-- Qwen document judgment should return each visible required field with `sourceRegion` when the original image or rendered page is available. The stored format is `{ page, x, y, width, height }` in percentage coordinates relative to the displayed page/image.
-- The API normalizes `sourceRegion`, `region`, or `bbox` outputs into `document_classification_results.raw_output.fields[].sourceRegion`; invalid or uncertain coordinates are omitted instead of fabricated.
+- Qwen document judgment should return each visible required field with `sourceRegion` when the original image or rendered page is available. The stored format is `{ page, x, y, width, height, source, verified }` in percentage coordinates relative to the displayed page/image.
+- Coordinate source policy:
+  - `source: "paddleocr", verified: true`: official PaddleOCR block bbox matched back to the extracted field value.
+  - `source: "qwen", verified: false`: Qwen visually estimated region from the original page/image. It is shown to help the accountant look in the right area, not as an exact bounding box.
+- The API normalizes `sourceRegion`, `region`, or `bbox` outputs into `document_classification_results.raw_output.fields[].sourceRegion`; invalid coordinates are omitted. Qwen should omit coordinates when it cannot visually locate the value.
 - The accountant review page may calculate only viewport presentation details such as current scroll position, hover connector paths, and whether a persisted overlay is currently visible. It must not infer new OCR boxes, field positions, document identity, or confidence.
 - If persisted file preview, OCR/Qwen result, or overlay coordinates are missing, show an explicit empty/unavailable state. Do not synthesize fake document pages, fake overlays, or fallback analysis in the accountant UI.
 - The review API must not expose `/api/submission-files/{id}` as a viewer URL when the stored file no longer exists. In that case the viewer shows a short human-readable unavailable state instead of rendering backend JSON/errors inside the document area.

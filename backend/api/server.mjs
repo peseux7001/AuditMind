@@ -251,15 +251,16 @@ const normalizeRawOutput = (value) => (value && typeof value === "object" && !Ar
 const normalizeReviewSourceRegion = (value) => {
   if (!value || typeof value !== "object") return null;
   const trustedSource = String(value.source || value.provider || value.origin || "").toLowerCase();
-  const isTrusted = trustedSource === "ocr" || trustedSource === "paddleocr" || value.verified === true;
+  const isTrusted = ["ocr", "paddleocr", "qwen"].includes(trustedSource) || value.verified === true;
   if (!isTrusted) return null;
   const source = trustedSource || "paddleocr";
+  const verified = value.verified === true || source === "ocr" || source === "paddleocr";
 
   const regionSource = Array.isArray(value.bbox) && !value.sourceRegion ? value.bbox : value.sourceRegion || value.region || value;
   if (Array.isArray(regionSource)) {
     const [x, y, width, height] = regionSource.map((part) => Number(part));
     if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return null;
-    return { page: 1, x, y, width, height, source, verified: true };
+    return { page: 1, x, y, width, height, source, verified };
   }
 
   const x = Number(regionSource.x ?? regionSource.left);
@@ -275,7 +276,7 @@ const normalizeReviewSourceRegion = (value) => {
     width: Math.max(0, Math.min(100, width)),
     height: Math.max(0, Math.min(100, height)),
     source,
-    verified: true,
+    verified,
   };
 };
 
@@ -1693,15 +1694,16 @@ const clampPercent = (value) => {
 const normalizeSourceRegion = (value) => {
   if (!value || typeof value !== "object") return null;
   const trustedSource = String(value.source || value.provider || value.origin || "").toLowerCase();
-  const isTrusted = trustedSource === "ocr" || trustedSource === "paddleocr" || value.verified === true;
+  const isTrusted = ["ocr", "paddleocr", "qwen"].includes(trustedSource) || value.verified === true;
   if (!isTrusted) return null;
   const source = trustedSource || "paddleocr";
+  const verified = value.verified === true || source === "ocr" || source === "paddleocr";
 
   const regionSource = Array.isArray(value.bbox) && !value.sourceRegion ? value.bbox : value.sourceRegion || value;
   if (Array.isArray(regionSource)) {
     const [x, y, width, height] = regionSource.map(clampPercent);
     if ([x, y, width, height].some((part) => part === null) || width <= 0 || height <= 0) return null;
-    return { page: 1, x, y, width, height, source, verified: true };
+    return { page: 1, x, y, width, height, source, verified };
   }
 
   const x = clampPercent(regionSource.x ?? regionSource.left);
@@ -1717,7 +1719,7 @@ const normalizeSourceRegion = (value) => {
     width,
     height,
     source,
-    verified: true,
+    verified,
   };
 };
 
@@ -1937,14 +1939,17 @@ const callQwenDocumentJudgment = async ({ fileBuffer, mimeType, originalFilename
     "requiredFields의 required=false 항목은 참고 항목입니다. 참고 항목이 없거나 흐려도 그것만으로 reject하지 마세요.",
     "띄어쓰기, 괄호, 약간 다른 표현은 엄격하게 비교하지 말고 같은 의미와 사용 가능한 값인지 기준으로 판단하세요.",
     "fields 배열에는 requiredFields에 포함된 항목을 가능한 한 같은 label로 반환하세요.",
-    "fields에는 값과 신뢰도만 반환하세요. 원본 위치 좌표나 sourceRegion은 반환하지 마세요.",
+    "fields에는 값, 신뢰도, 그리고 원본 이미지에서 직접 눈으로 위치를 찾을 수 있는 경우 sourceRegion을 반환하세요.",
+    "sourceRegion은 전체 원본 이미지 기준 퍼센트 좌표입니다. page=1, x/y/width/height는 0~100 숫자, source='qwen', verified=false 형식으로 반환하세요.",
+    "sourceRegion은 해당 값이 실제로 보이는 영역만 표시하세요. 화면 메뉴, 브라우저 UI, 빈 영역, 표 전체를 값 위치로 표시하지 마세요.",
+    "정확한 위치를 모르거나 텍스트 후보만으로 추정한 경우 sourceRegion을 생략하세요. 좌표를 억지로 만들면 안 됩니다.",
     "decision은 내부 시스템용 값입니다. reviewMessage에는 match, possible_match, reject, undecided, confidence, OCR, Qwen, JSON, 필수 항목 같은 내부 용어를 절대 쓰지 마세요.",
     "reviewMessage는 고객이 보는 안내문입니다. 정중하고 짧은 한국어 문장으로, 왜 다시 업로드해야 하는지와 어떤 자료를 올리면 되는지만 안내하세요.",
     "자료가 충분히 확인되면 reviewMessage에는 접수 가능한 상태임을 자연스럽게 안내하세요.",
     "자료가 애매하거나 부족하면 reviewMessage에는 원본 파일, 전체 문서, 더 선명한 자료 중 무엇을 다시 올리면 되는지 안내하세요.",
     "반드시 JSON만 반환하세요.",
     "스키마:",
-    '{"matchedItemId":"uuid 또는 빈 문자열","decision":"match|possible_match|reject|undecided","confidence":0.0,"reviewMessage":"고객에게 보여줄 한국어 문장","reason":"판정 근거","fields":[{"label":"필드명","value":"값 또는 미확인","confidence":"높음|중간|낮음|미확인"}]}',
+    '{"matchedItemId":"uuid 또는 빈 문자열","decision":"match|possible_match|reject|undecided","confidence":0.0,"reviewMessage":"고객에게 보여줄 한국어 문장","reason":"판정 근거","fields":[{"label":"필드명","value":"값 또는 미확인","confidence":"높음|중간|낮음|미확인","sourceRegion":{"page":1,"x":0,"y":0,"width":0,"height":0,"source":"qwen","verified":false}}]}',
     `파일명: ${originalFilename}`,
     "요청자료 후보:",
     requestedSummary,

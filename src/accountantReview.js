@@ -84,8 +84,16 @@ const hasRenderableSourceRegion = (field, pageNumber) => {
   const region = field?.sourceRegion;
   if (!region || Number(region.page || 1) !== Number(pageNumber)) return false;
   const trustedSource = String(region.source || region.provider || region.origin || "").toLowerCase();
-  if (!(trustedSource === "ocr" || trustedSource === "paddleocr" || region.verified === true)) return false;
+  if (!(trustedSource === "ocr" || trustedSource === "paddleocr" || trustedSource === "qwen" || region.verified === true)) return false;
   return ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(region[key])));
+};
+
+const getRecognitionSourceClass = (region) => {
+  const source = String(region?.source || "").toLowerCase();
+  if (source === "qwen" && region?.verified !== true) {
+    return "border-dashed";
+  }
+  return "border-solid";
 };
 
 const renderRecognitionOverlays = (item, pageNumber) => {
@@ -101,7 +109,8 @@ const renderRecognitionOverlays = (item, pageNumber) => {
             <div class="${cx(
               "absolute rounded-[5px] border-[3px] opacity-100 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.88),0_0_0_1px_rgba(4,56,115,0.18),0_4px_12px_rgba(4,56,115,0.16)] backdrop-blur-[0.5px] transition-[opacity,box-shadow,transform,border-width] duration-150",
               getRecognitionBoxClass(field.confidence),
-            )}" data-recognition-region="${escapeHtml(field.label)}" data-recognition-color="${escapeHtml(getRecognitionColor(field.confidence))}" title="${escapeHtml(field.label)}: ${escapeHtml(field.value || "미확인")}" style="left:${escapeHtml(region.x)}%;top:${escapeHtml(region.y)}%;width:${escapeHtml(region.width)}%;height:${escapeHtml(region.height)}%;"></div>
+              getRecognitionSourceClass(region),
+            )}" data-recognition-region="${escapeHtml(field.label)}" data-recognition-color="${escapeHtml(getRecognitionColor(field.confidence))}" title="${escapeHtml(field.label)}: ${escapeHtml(field.value || "미확인")} · ${region.verified === true ? "OCR 확정 위치" : "Qwen 추정 위치"}" style="left:${escapeHtml(region.x)}%;top:${escapeHtml(region.y)}%;width:${escapeHtml(region.width)}%;height:${escapeHtml(region.height)}%;"></div>
           `;
         })
         .join("")}
