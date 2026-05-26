@@ -13,11 +13,13 @@ services:
         condition: service_started
 
   api:
-    image: node:22-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.api
     container_name: auditmind-api
     restart: unless-stopped
     working_dir: /workspace
-    command: sh -c "apk add --no-cache python3 && npm install --omit=dev && node backend/api/server.mjs"
+    command: sh -c "npm install --omit=dev && node backend/api/server.mjs"
     environment:
       AUDITMIND_API_PORT: 4174
       AUDITMIND_DB_HOST: db
@@ -26,6 +28,10 @@ services:
       AUDITMIND_DB_USER: ${AUDITMIND_DB_USER:-auditmind}
       AUDITMIND_DB_PASSWORD: ${AUDITMIND_DB_PASSWORD:-auditmind_dev_password}
       AUDITMIND_CURRENT_USER_ID: ${AUDITMIND_CURRENT_USER_ID:-system}
+      AUDITMIND_PADDLE_OCR_PYTHON: /opt/paddleocr/bin/python
+      AUDITMIND_PADDLE_OCR_VL_SERVER_URL: ${AUDITMIND_PADDLE_OCR_VL_SERVER_URL:-http://100.126.53.70:8118/v1}
+      AUDITMIND_PADDLE_OCR_MODEL: ${AUDITMIND_PADDLE_OCR_MODEL:-PaddleOCR-VL-1.5-0.9B}
+      PADDLE_PDX_CACHE_HOME: /workspace/.paddlex-cache
     ports:
       - "127.0.0.1:4174:4174"
     volumes:

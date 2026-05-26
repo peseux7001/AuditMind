@@ -306,6 +306,9 @@ Current page behavior:
   - Uploads pass through the backend file-processing boundary before analysis. The API validates supported extensions, rejects executables for direct upload, enforces `AUDITMIND_MAX_UPLOAD_FILE_BYTES`, safely expands ZIP files, rejects encrypted/unsafe archives, and stores accepted ZIP children as individual uploaded files.
   - ZIP children with unsupported or executable extensions are ignored and are not stored or analyzed. They must not reject the whole archive when at least one supported child file is present.
   - CSV/TSV, XLSX/XLSM, DOCX, and HWPX can provide extracted text/table evidence to Qwen. Images still use PaddleOCR-VL first. Legacy XLS/DOC/HWP remain supported inputs but depend on the configured converters listed below.
+  - Image/PDF uploads run the official PaddleOCR-VL pipeline at customer-upload time when the runtime has `AUDITMIND_PADDLE_OCR_PYTHON` available. The pipeline artifacts are stored under `public/uploads/{request_id}/_ocr/{uploaded_file_id}/`.
+  - Qwen must not invent visual overlay coordinates. The backend only persists `sourceRegion` when a Qwen field value can be matched back to an official PaddleOCR block bbox. Persisted regions must include `source: "paddleocr"` and `verified: true`.
+  - Accountant-facing overlays and connector lines are rendered only from those persisted, verified PaddleOCR regions. If no verified region exists, the accountant page must show the field table without an overlay rather than drawing guessed boxes.
   - `PUT /api/submission-portal/:token/customer-request` stores the customer-written `요청사항` as draft or submitted.
   - `PUT /api/submission-portal/:token/items/:item_id/final-submit` marks an approved checklist row as `접수완료`.
   - `GET /api/submission-files/:file_id` streams the stored uploaded file for download/review links.
@@ -641,6 +644,14 @@ Python: /Users/peseux7001/.local/bin/python3.12
 Virtualenv: .venv-paddleocr
 Install: .venv-paddleocr/bin/python -m pip install "paddleocr[doc-parser]" paddlepaddle
 Cache: PADDLE_PDX_CACHE_HOME="$PWD/.paddlex-cache"
+```
+
+Production PaddleOCR runtime:
+
+```txt
+Dockerfile.api builds /opt/paddleocr with paddleocr[doc-parser] + paddlepaddle.
+docker-compose.yml sets AUDITMIND_PADDLE_OCR_PYTHON=/opt/paddleocr/bin/python.
+The API container calls backend/ocr/paddleocr_vl_pipeline.py and uses the Tailscale PaddleOCR-VL server for VLM recognition.
 ```
 
 Default PaddleOCR-VL settings:

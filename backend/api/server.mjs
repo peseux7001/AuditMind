@@ -13,9 +13,12 @@ const publicUploadBaseUrl = process.env.AUDITMIND_PUBLIC_UPLOAD_BASE_URL || "/up
 const qwenChatUrl = process.env.AUDITMIND_QWEN_CHAT_URL || "http://100.120.165.93:8090/v1/chat/completions";
 const qwenModel = process.env.AUDITMIND_QWEN_MODEL || "Qwen3.6-35B-A3B-UD-Q8_K_XL.gguf";
 const paddleOcrChatUrl = process.env.AUDITMIND_PADDLE_OCR_CHAT_URL || "http://100.126.53.70:8118/v1/chat/completions";
+const paddleOcrVlServerUrl = process.env.AUDITMIND_PADDLE_OCR_VL_SERVER_URL || "http://100.126.53.70:8118/v1";
 const paddleOcrModel = process.env.AUDITMIND_PADDLE_OCR_MODEL || "PaddleOCR-VL-1.5-0.9B";
 const maxUploadFileBytes = Number(process.env.AUDITMIND_MAX_UPLOAD_FILE_BYTES || 50 * 1024 * 1024);
 const fileProcessorPath = path.resolve(process.cwd(), "backend/document_processing/file_processor.py");
+const paddleOcrPipelinePath = path.resolve(process.cwd(), "backend/ocr/paddleocr_vl_pipeline.py");
+const paddleOcrPipelinePython = process.env.AUDITMIND_PADDLE_OCR_PYTHON || path.resolve(process.cwd(), ".venv-paddleocr/bin/python");
 const pythonCommand = process.env.AUDITMIND_PYTHON || "python3";
 
 const execFileAsync = promisify(execFile);
@@ -250,12 +253,13 @@ const normalizeReviewSourceRegion = (value) => {
   const trustedSource = String(value.source || value.provider || value.origin || "").toLowerCase();
   const isTrusted = trustedSource === "ocr" || trustedSource === "paddleocr" || value.verified === true;
   if (!isTrusted) return null;
+  const source = trustedSource || "paddleocr";
 
   const regionSource = Array.isArray(value.bbox) && !value.sourceRegion ? value.bbox : value.sourceRegion || value.region || value;
   if (Array.isArray(regionSource)) {
     const [x, y, width, height] = regionSource.map((part) => Number(part));
     if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return null;
-    return { page: 1, x, y, width, height };
+    return { page: 1, x, y, width, height, source, verified: true };
   }
 
   const x = Number(regionSource.x ?? regionSource.left);
@@ -270,6 +274,8 @@ const normalizeReviewSourceRegion = (value) => {
     y: Math.max(0, Math.min(100, y)),
     width: Math.max(0, Math.min(100, width)),
     height: Math.max(0, Math.min(100, height)),
+    source,
+    verified: true,
   };
 };
 
@@ -1689,12 +1695,13 @@ const normalizeSourceRegion = (value) => {
   const trustedSource = String(value.source || value.provider || value.origin || "").toLowerCase();
   const isTrusted = trustedSource === "ocr" || trustedSource === "paddleocr" || value.verified === true;
   if (!isTrusted) return null;
+  const source = trustedSource || "paddleocr";
 
   const regionSource = Array.isArray(value.bbox) && !value.sourceRegion ? value.bbox : value.sourceRegion || value;
   if (Array.isArray(regionSource)) {
     const [x, y, width, height] = regionSource.map(clampPercent);
     if ([x, y, width, height].some((part) => part === null) || width <= 0 || height <= 0) return null;
-    return { page: 1, x, y, width, height };
+    return { page: 1, x, y, width, height, source, verified: true };
   }
 
   const x = clampPercent(regionSource.x ?? regionSource.left);
@@ -1709,6 +1716,8 @@ const normalizeSourceRegion = (value) => {
     y,
     width,
     height,
+    source,
+    verified: true,
   };
 };
 
@@ -1747,6 +1756,165 @@ const callPaddleOcrCandidate = async ({ fileBuffer, mimeType }) => {
   };
   const result = await callChatCompletion(paddleOcrChatUrl, payload, 60_000);
   return extractAssistantText(result);
+};
+
+const normalizeOcrTextForMatch = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .normalize("NFKC")
+    .replace(/[^\p{L}\p{N}]+/gu, "");
+
+const bboxToPercentRegion = (bbox, width, height) => {
+  if (!Array.isArray(bbox) || bbox.length < 4 || !width || !height) return null;
+  const [left, top, right, bottom] = bbox.map(Number);
+  if (![left, top, right, bottom].every(Number.isFinite)) return null;
+  const x = Math.max(0, Math.min(100, (left / width) * 100));
+  const y = Math.max(0, Math.min(100, (top / height) * 100));
+  const regionWidth = Math.max(0, Math.min(100 - x, ((right - left) / width) * 100));
+  const regionHeight = Math.max(0, Math.min(100 - y, ((bottom - top) / height) * 100));
+  if (regionWidth <= 0 || regionHeight <= 0) return null;
+  return { page: 1, x, y, width: regionWidth, height: regionHeight, source: "paddleocr", verified: true };
+};
+
+const extractPaddleOcrBlocks = (ocrJson) => {
+  const pageWidth = Number(ocrJson?.width || 0);
+  const pageHeight = Number(ocrJson?.height || 0);
+  const blocks = Array.isArray(ocrJson?.parsing_res_list) ? ocrJson.parsing_res_list : [];
+  return blocks
+    .map((block) => {
+      const text = String(block?.block_content || "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      const region = bboxToPercentRegion(block?.block_bbox, pageWidth, pageHeight);
+      if (!text || !region) return null;
+      const label = String(block?.block_label || "");
+      const area = region.width * region.height;
+      return {
+        text,
+        normalizedText: normalizeOcrTextForMatch(text),
+        label,
+        region,
+        area,
+      };
+    })
+    .filter(Boolean);
+};
+
+const readPaddleOcrOutput = async (outputDir) => {
+  const entries = await fs.readdir(outputDir).catch(() => []);
+  const jsonFiles = entries.filter((entry) => entry.endsWith("_res.json") || entry.endsWith(".json"));
+  const markdownFiles = entries.filter((entry) => entry.endsWith(".md"));
+  const blocks = [];
+  const textParts = [];
+
+  for (const entry of jsonFiles) {
+    if (entry === "auditmind_ocr_manifest.json") continue;
+    try {
+      const parsed = JSON.parse(await fs.readFile(path.join(outputDir, entry), "utf8"));
+      blocks.push(...extractPaddleOcrBlocks(parsed));
+    } catch {
+      // Ignore individual OCR artifact parse failures; the upload can continue with text-only recognition.
+    }
+  }
+
+  for (const entry of markdownFiles) {
+    try {
+      textParts.push(await fs.readFile(path.join(outputDir, entry), "utf8"));
+    } catch {
+      // Ignore missing markdown artifacts.
+    }
+  }
+
+  if (!textParts.length && blocks.length) {
+    textParts.push(blocks.map((block) => block.text).join("\n"));
+  }
+
+  return {
+    text: textParts.join("\n").trim(),
+    blocks,
+  };
+};
+
+const runOfficialPaddleOcrPipeline = async ({ absolutePath, outputDir }) => {
+  try {
+    await fs.access(paddleOcrPipelinePython);
+  } catch {
+    return { text: "", blocks: [], skipped: "paddleocr_python_missing" };
+  }
+
+  await fs.mkdir(outputDir, { recursive: true });
+  try {
+    await execFileAsync(
+      paddleOcrPipelinePython,
+      [
+        paddleOcrPipelinePath,
+        absolutePath,
+        "--output-dir",
+        outputDir,
+        "--vl-server-url",
+        paddleOcrVlServerUrl,
+        "--vl-model-name",
+        paddleOcrModel,
+      ],
+      {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          PADDLE_PDX_CACHE_HOME: process.env.PADDLE_PDX_CACHE_HOME || path.resolve(process.cwd(), ".paddlex-cache"),
+        },
+        maxBuffer: 20 * 1024 * 1024,
+        timeout: 180_000,
+      },
+    );
+    return readPaddleOcrOutput(outputDir);
+  } catch (error) {
+    return { text: "", blocks: [], skipped: error.message || "paddleocr_pipeline_failed" };
+  }
+};
+
+const chooseOcrBlockForField = (field, ocrBlocks) => {
+  const value = String(field?.value || "").trim();
+  const normalizedValue = normalizeOcrTextForMatch(value);
+  if (!normalizedValue || ["미확인", "인식불안정"].includes(value) || normalizedValue.length < 2) return null;
+
+  const candidates = ocrBlocks
+    .map((block) => {
+      if (!block.normalizedText) return null;
+      const containsValue = block.normalizedText.includes(normalizedValue);
+      const valueContainsBlock = normalizedValue.length >= 4 && normalizedValue.includes(block.normalizedText);
+      const numericTokens = value.match(/\d[\d,./:-]*/g) || [];
+      const numericHits = numericTokens.filter((token) => {
+        const normalizedToken = normalizeOcrTextForMatch(token);
+        return normalizedToken.length >= 3 && block.normalizedText.includes(normalizedToken);
+      }).length;
+      let score = 0;
+      if (containsValue) score += 100;
+      if (valueContainsBlock) score += 70;
+      score += Math.min(40, numericHits * 12);
+      if (block.label === "table") score -= 35;
+      if (block.area > 20) score -= 25;
+      if (block.area > 45) score -= 25;
+      if (score <= 0) return null;
+      return { block, score };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score || a.block.area - b.block.area);
+
+  return candidates[0]?.block || null;
+};
+
+const attachTrustedOcrRegions = (fields, ocrBlocks) => {
+  if (!Array.isArray(fields) || !ocrBlocks.length) return fields;
+  return fields.map((field) => {
+    if (field?.sourceRegion || field?.region || field?.bbox) return field;
+    const block = chooseOcrBlockForField(field, ocrBlocks);
+    if (!block) return field;
+    return {
+      ...field,
+      sourceRegion: block.region,
+    };
+  });
 };
 
 const callQwenDocumentJudgment = async ({ fileBuffer, mimeType, originalFilename, requestedItems, ocrText }) => {
@@ -2025,7 +2193,16 @@ const persistClassificationResult = async ({ uploadedFileId, item, judgment, mod
   );
 };
 
-const analyzeUploadedFile = async ({ uploadedFileId, requestId, fileBuffer, mimeType, originalFilename, targetItemId = "", preExtractedText = "" }) => {
+const analyzeUploadedFile = async ({
+  uploadedFileId,
+  requestId,
+  fileBuffer,
+  mimeType,
+  originalFilename,
+  targetItemId = "",
+  preExtractedText = "",
+  absolutePath = "",
+}) => {
   let requestedItems = await getRequestedItemsForRequest(requestId);
   if (targetItemId) {
     requestedItems = requestedItems.filter((item) => item.id === targetItemId);
@@ -2033,6 +2210,15 @@ const analyzeUploadedFile = async ({ uploadedFileId, requestId, fileBuffer, mime
   if (!requestedItems.length) return;
 
   let ocrText = preExtractedText || "";
+  let ocrBlocks = [];
+  const shouldRunOfficialOcr = absolutePath && (mimeType.startsWith("image/") || mimeType === "application/pdf");
+  if (shouldRunOfficialOcr) {
+    const ocrOutputDir = path.join(uploadRoot, requestId, "_ocr", uploadedFileId);
+    const officialOcr = await runOfficialPaddleOcrPipeline({ absolutePath, outputDir: ocrOutputDir });
+    ocrBlocks = officialOcr.blocks || [];
+    ocrText = [ocrText, officialOcr.text].filter(Boolean).join("\n").slice(0, 30_000);
+  }
+
   if (!ocrText) {
     try {
       ocrText = await callPaddleOcrCandidate({ fileBuffer, mimeType });
@@ -2044,6 +2230,9 @@ const analyzeUploadedFile = async ({ uploadedFileId, requestId, fileBuffer, mime
   let judgment = null;
   try {
     judgment = await callQwenDocumentJudgment({ fileBuffer, mimeType, originalFilename, requestedItems, ocrText });
+    if (judgment?.fields) {
+      judgment.fields = attachTrustedOcrRegions(judgment.fields, ocrBlocks);
+    }
   } catch (error) {
     judgment = null;
   }
@@ -2238,6 +2427,7 @@ const storeUploadedPortalFiles = async (rawToken, req) => {
       originalFilename: file.originalFilename,
       targetItemId,
       preExtractedText: buildOcrTextFromProcessorRecord(file.processorRecord),
+      absolutePath: file.absolutePath,
     }).catch(async (error) => {
       await pool.query("UPDATE uploaded_files SET processing_status = 'failed', processing_error = $2 WHERE id = $1", [
         file.fileId,
