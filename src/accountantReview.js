@@ -145,6 +145,12 @@ const getSortedDocumentItems = (items, sortState) => {
   });
 };
 
+const getPreferredReviewItem = (items, selectedId = "") =>
+  items.find((item) => item.id === selectedId) ||
+  items.find((item) => !isMissingStatus(item.status) && item.fileUrl) ||
+  items.find((item) => !isMissingStatus(item.status)) ||
+  items[0];
+
 const renderCompanyDocumentRows = (items, selectedId, sortState) =>
   getSortedDocumentItems(items, sortState)
     .map(
@@ -397,7 +403,7 @@ const renderReviewBody = (items, selectedId, reviewSortState, documentSortState,
     getCompanyGroups(reviewableItems).find((group) => group.id === selectedCompanyIdCandidate) ||
     companyGroups[0] ||
     getCompanyGroups(reviewableItems)[0];
-  const selectedItem = selectedGroup.items.find((item) => item.id === selectedId) || selectedGroup.items[0];
+  const selectedItem = getPreferredReviewItem(selectedGroup.items, selectedId);
   return `
     <section class="grid gap-4 overflow-visible xl:h-[calc(100vh-130px)] xl:min-h-[620px] xl:grid-rows-[auto_minmax(0,1fr)] xl:overflow-hidden">
       <section class="grid gap-4 xl:grid-cols-[minmax(420px,1.15fr)_minmax(240px,0.85fr)_minmax(260px,0.9fr)]">
