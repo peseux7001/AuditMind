@@ -80,8 +80,14 @@ const getRecognitionColor = (confidence) => {
   return "rgb(79 156 249 / 62%)";
 };
 
+const hasRenderableSourceRegion = (field, pageNumber) => {
+  const region = field?.sourceRegion;
+  if (!region || Number(region.page || 1) !== Number(pageNumber)) return false;
+  return ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(region[key])));
+};
+
 const renderRecognitionOverlays = (item, pageNumber) => {
-  const fieldsWithRegions = (item.fields || []).filter((field) => Number(field.sourceRegion?.page || 1) === Number(pageNumber));
+  const fieldsWithRegions = (item.fields || []).filter((field) => hasRenderableSourceRegion(field, pageNumber));
   if (!fieldsWithRegions.length) return "";
 
   return `
