@@ -130,6 +130,7 @@ let customerRequestSaved = false;
 let customerRequestSubmitted = false;
 let portalApiMode = false;
 let portalPollTimer;
+let portalRenderSignature = "";
 
 const normalizeWorkflowCopy = () => {
   content.checklist.filters = [...customerPortalContent.checklist.filters];
@@ -321,6 +322,35 @@ const applyPortalPayload = (payload) => {
   return true;
 };
 
+const getPortalRenderSignature = (payload) => {
+  if (!payload?.request || !Array.isArray(payload.items)) return "";
+  return JSON.stringify({
+    request: {
+      customerName: payload.request.customerName || "",
+      title: payload.request.title || "",
+      progressValue: payload.request.progressValue || "",
+      progressDetail: payload.request.progressDetail || "",
+      dueDate: payload.request.dueDate || "",
+      deadlineDetail: payload.request.deadlineDetail || "",
+      deadlinePercent: payload.request.deadlinePercent || "",
+      customerRequestMessage: payload.request.customerRequestMessage || "",
+      customerRequestStatus: payload.request.customerRequestStatus || "",
+    },
+    items: payload.items.map((item) => ({
+      id: item.id || "",
+      status: item.status || "",
+      statusTone: item.statusTone || "",
+      title: item.title || "",
+      reviewMessage: item.reviewMessage || "",
+      accountantComment: item.accountantComment || "",
+      action: item.action || "",
+      primaryAction: Boolean(item.primaryAction),
+      attachmentName: item.attachment?.name || "",
+      attachmentMeta: item.attachment?.meta || "",
+    })),
+  });
+};
+
 const fetchPortalPayload = async () => {
   const response = await fetch(portalEndpoint, { headers: { Accept: "application/json" } });
   if (!response.ok) throw new Error(`portal_fetch_failed_${response.status}`);
@@ -329,8 +359,11 @@ const fetchPortalPayload = async () => {
 
 const refreshPortalFromApi = async ({ rerender = true } = {}) => {
   const payload = await fetchPortalPayload();
+  const nextSignature = getPortalRenderSignature(payload);
+  const changed = nextSignature && nextSignature !== portalRenderSignature;
   applyPortalPayload(payload);
-  if (rerender) rerenderApp({ animateChecklist: true });
+  if (nextSignature) portalRenderSignature = nextSignature;
+  if (rerender && changed) rerenderApp({ animateChecklist: true });
   return payload;
 };
 
